@@ -31,8 +31,8 @@ from keras.optimizers import Adam
 NITERS = 500000
 DISPLAY_ITERS = 5000
 
-INPUT_DATA = 'AIA0304'
-OUTPUT_DATA = 'HMI0100'
+INPUT_DATA = 'TEST_INPUT'
+OUTPUT_DATA = 'TEST_OUTPUT'
 
 ISIZE = 1024
 NC_IN = 1
@@ -40,7 +40,7 @@ NC_OUT = 1
 BATCH_SIZE = 1
 MAX_LAYERS = 3 #1 for 16, 2 for 34, 3 for 70, 4 for 142, and 5 for 286
 
-TRIAL_NAME = 'ORIGINAL_MxLr' + str(MAX_LAYERS)
+TRIAL_NAME = 'TEST' + str(MAX_LAYERS)
 
 #%%
 
