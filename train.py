@@ -28,8 +28,8 @@ from keras.optimizers import Adam
 
 #%% Hyper parameters
 
-NITERS = 500000
-DISPLAY_ITERS = 5000
+NITERS = 6
+DISPLAY_ITERS = 2
 
 INPUT_DATA = 'TEST_INPUT'
 OUTPUT_DATA = 'TEST_OUTPUT'
