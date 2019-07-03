@@ -19,6 +19,9 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 tf.Session(config = config)
 
+def listdir_nohidden(path):
+    return glob.glob(os.path.join(path, '*'))
+
 #%%
 
 SLEEP_TIME = 1000
@@ -28,6 +31,7 @@ MAX_ITER = 6
 MODE = 'TEST_INPUT_to_TEST_OUTPUT'
 TRIAL_NAME = 'TEST3'
 
+INPUT = 'TEST_INPUT' # input used while training
 INPUT1 = 'TEST_INPUT1'
 INPUT2 = 'TEST_INPUT2'
 OUTPUT = 'TEST_OUTPUT'
@@ -158,7 +162,8 @@ while ITER <= MAX_ITER :
         FAKE = NET_G_GEN(IMG)
         FAKE = ((FAKE[0] + 1) / 2.0 * 255.).clip(0, 255).astype('uint8')
         FAKE.shape = (ISIZE, ISIZE) if NC_IN == 1 else (ISIZE, ISIZE, NC_OUT)
-        SAVE_NAME = SAVE_PATH1 + OP1 + '_' + DATE + '.png'
+#        SAVE_NAME = SAVE_PATH1 + OP1 + '_' + DATE + '.png'
+        SAVE_NAME = SAVE_PATH1 + OP1 + '_' + str(I) + '.png'
         imsave(SAVE_NAME, FAKE)
 
         RP, RN, RT = TUMF_VALUE(REAL, RSUN, SATURATION, THRESHOLD)        
@@ -174,25 +179,28 @@ while ITER <= MAX_ITER :
         FAKE = NET_G_GEN(IMG)
         FAKE = ((FAKE[0] + 1) / 2.0 * 255.).clip(0, 255).astype('uint8')
         FAKE.shape = (ISIZE, ISIZE) if NC_IN == 1 else (ISIZE, ISIZE, NC_OUT)
-        SAVE_NAME = SAVE_PATH2 + OP2 + '_' + DATE + '.png'
+        # SAVE_NAME = SAVE_PATH2 + OP2 + '_' + DATE + '.png'
+        SAVE_NAME = SAVE_PATH2 + OP2 + '_' + str(J) + '.png'
         imsave(SAVE_NAME, FAKE)
 
     def MAKE_FIGURE():
+        INPUT1_IMAGE_LIST = listdir_nohidden('./DATA/TEST/'+INPUT1 +'/')
+        I1 = np.array(imread(INPUT1_IMAGE_LIST[0]))
+        I2 = np.array(imread(INPUT1_IMAGE_LIST[1]))
+        I3 = np.array(imread(INPUT1_IMAGE_LIST[2]))
+        I4 = np.array(imread(INPUT1_IMAGE_LIST[3]))
 
-        I1 = np.array(imread('./DATA/TEST/AIA0304/AIA0304_20170901_120005.png'))
-        I2 = np.array(imread('./DATA/TEST/AIA0304/AIA0304_20170903_120005.png'))
-        I3 = np.array(imread('./DATA/TEST/AIA0304/AIA0304_20170905_120005.png'))
-        I4 = np.array(imread('./DATA/TEST/AIA0304/AIA0304_20170907_120005.png'))
-    
-        T1 = np.array(imread('./DATA/TEST/HMI0100/HMI_20170901_120130.png'))
-        T2 = np.array(imread('./DATA/TEST/HMI0100/HMI_20170903_120130.png'))
-        T3 = np.array(imread('./DATA/TEST/HMI0100/HMI_20170905_120130.png'))
-        T4 = np.array(imread('./DATA/TEST/HMI0100/HMI_20170907_120130.png'))
+        OUTPUT_IMAGE_LIST = listdir_nohidden('./DATA/TEST/'+OUTPUT +'/')
 
-        O1 = np.array(imread(SAVE_PATH1 + '/' + OP1 + '_20170901_120005.png'))
-        O2 = np.array(imread(SAVE_PATH1 + '/' + OP1 + '_20170903_120005.png'))
-        O3 = np.array(imread(SAVE_PATH1 + '/' + OP1 + '_20170905_120005.png'))
-        O4 = np.array(imread(SAVE_PATH1 + '/' + OP1 + '_20170907_120005.png'))
+        T1 = np.array(imread(OUTPUT_IMAGE_LIST[0]))
+        T2 = np.array(imread(OUTPUT_IMAGE_LIST[1]))
+        T3 = np.array(imread(OUTPUT_IMAGE_LIST[2]))
+        T4 = np.array(imread(OUTPUT_IMAGE_LIST[3]))
+
+        O1 = np.array(imread(SAVE_PATH1 + '/' + OP1 + '_0.png'))
+        O2 = np.array(imread(SAVE_PATH1 + '/' + OP1 + '_1.png'))
+        O3 = np.array(imread(SAVE_PATH1 + '/' + OP1 + '_2.png'))
+        O4 = np.array(imread(SAVE_PATH1 + '/' + OP1 + '_3.png'))
 
         fig2 = plt.figure()
 
@@ -255,16 +263,20 @@ while ITER <= MAX_ITER :
         fig3.savefig(FIGURE_PATH + '_FIGURE3.png')
         plt.close(fig3)
 
+        INPUT2_IMAGE_LIST = listdir_nohidden('./DATA/TEST/'+INPUT2 +'/')
+        INPUT_TRAIN_IMAGE_LIST = listdir_nohidden('./DATA/TRAIN/'+INPUT +'/')
 
-        U1 = np.array(imread('./DATA/TEST/EUVI304/EUVI304_20140604_121615.png'))
-        U2 = np.array(imread('./DATA/TEST/EUVI304/EUVI304_20140607_120615.png'))
-        U3 = np.array(imread('./DATA/TRAIN/AIA0304/AIA0304_20140610_120007.png'))
-        U4 = np.array(imread('./DATA/TRAIN/AIA0304/AIA0304_20140613_120007.png'))
-    
-        D1 = np.array(imread(SAVE_PATH2 + '/' + OP2 + '_20140604_121615.png'))
-        D2 = np.array(imread(SAVE_PATH2 + '/' + OP2 + '_20140607_120615.png'))
-        D3 = np.array(imread('./DATA/TRAIN/HMI0100/HMI_20140610_120130.png'))
-        D4 = np.array(imread('./DATA/TRAIN/HMI0100/HMI_20140613_120130.png'))
+        U1 = np.array(imread(INPUT2_IMAGE_LIST[0]))
+        U2 = np.array(imread(INPUT2_IMAGE_LIST[1]))
+        U3 = np.array(imread(INPUT_TRAIN_IMAGE_LIST[0]))
+        U4 = np.array(imread(INPUT_TRAIN_IMAGE_LIST[1]))
+        
+        OUTPUT_TRAIN_IMAGE_LIST = listdir_nohidden('./DATA/TRAIN/'+OUTPUT +'/')
+        
+        D1 = np.array(imread(SAVE_PATH2 + '/' + OP2 + '_0.png'))
+        D2 = np.array(imread(SAVE_PATH2 + '/' + OP2 + '_1.png'))
+        D3 = np.array(imread(OUTPUT_TRAIN_IMAGE_LIST[0]))
+        D4 = np.array(imread(OUTPUT_TRAIN_IMAGE_LIST[1]))
 
         fig4 = plt.figure()
 
