@@ -1,5 +1,3 @@
-# %%
-
 import numpy as np
 import os
 import glob
@@ -49,13 +47,12 @@ ISIZE = 1024  # height of the image
 NC_IN = 1  # number of input channels (1 for greyscale, 3 for RGB)
 NC_OUT = 1  # number of output channels (1 for greyscale, 3 for RGB)
 BATCH_SIZE = 1  # number of images in each batch
-# max layers in the discriminator
-# 1 for 16, 2 for 34, 3 for 70, 4 for 142, and 5 for 286
+# max layers in the discriminator not including sigmoid activation:
+# 1 for 16, 2 for 34, 3 for 70, 4 for 142, and 5 for 286 (receptive field size)
 MAX_LAYERS = 3
 
 TRIAL_NAME = 'TEST' + str(MAX_LAYERS)
 
-# %%
 
 MODE = INPUT_DATA + '_to_' + OUTPUT_DATA  # folder name for saving the model
 
@@ -68,7 +65,7 @@ os.mkdir(MODEL_PATH_MAIN) if not os.path.exists(MODEL_PATH_MAIN) else None
 MODEL_PATH = MODEL_PATH_MAIN + MODE + '/'
 os.mkdir(MODEL_PATH) if not os.path.exists(MODEL_PATH) else None
 
-# %%
+
 # generates tensors with a normal distribution with (mean, standard deviation)
 # this is used as a matrix of weights
 CONV_INIT = RandomNormal(0, 0.02)
@@ -107,13 +104,15 @@ def LEAKY_RELU(alpha):
 
 #  the descriminator
 def BASIC_D(ISIZE, NC_IN, NC_OUT, MAX_LAYERS):
+    # combines the inputs from the generator and the desired input
     INPUT_A, INPUT_B = Input(shape=(ISIZE, ISIZE, NC_IN)),\
         Input(shape=(ISIZE, ISIZE, NC_OUT))
 
     INPUT = Concatenate(axis=CH_AXIS)([INPUT_A, INPUT_B])
 
     if MAX_LAYERS == 0:
-        N_FEATURE = 1
+        N_FEATURE = 1  # number of filters to use
+        # apply sigmoid activation
         L = DN_CONV(N_FEATURE,
                     kernel_size=1,
                     padding='same',
@@ -121,32 +120,42 @@ def BASIC_D(ISIZE, NC_IN, NC_OUT, MAX_LAYERS):
                     )(INPUT)
 
     else:
-        N_FEATURE = 64
+        N_FEATURE = 64  # number of filters to use
+        # apply convolution
         L = DN_CONV(N_FEATURE,
                     kernel_size=4,
                     strides=2,
                     padding="same"
                     )(INPUT)
+        # Apply leaky ReLU activation with a slope of 0.2
         L = LEAKY_RELU(0.2)(L)
 
+        # Apply convolution MAX_LAYERS times
         for i in range(1, MAX_LAYERS):
-            N_FEATURE *= 2
+            N_FEATURE *= 2  # double the number of filters
+            # Apply convolution
             L = DN_CONV(N_FEATURE,
                         kernel_size=4,
                         strides=2,
                         padding="same"
                         )(L)
+            # normalise
             L = BATNORM()(L, training=1)
+            # Apply leaky ReLU activation with a slope of 0.2
             L = LEAKY_RELU(0.2)(L)
 
-        N_FEATURE *= 2
-        L = ZeroPadding2D(1)(L)
+        N_FEATURE *= 2  # double the number of filters
+        L = ZeroPadding2D(1)(L)  # pads the model with 0s with a thickness of 1
+        # Apply convolution
         L = DN_CONV(N_FEATURE, kernel_size=4, padding="valid")(L)
+        # normalise
         L = BATNORM()(L, training=1)
+        # Apply leaky ReLU activation with a slope of 0.2
         L = LEAKY_RELU(0.2)(L)
 
         N_FEATURE = 1
-        L = ZeroPadding2D(1)(L)
+        L = ZeroPadding2D(1)(L)  # pads the model with 0s with a thickness of 1
+        # Apply sigmoid activation
         L = DN_CONV(N_FEATURE,
                     kernel_size=4,
                     padding="valid",
@@ -158,50 +167,78 @@ def BASIC_D(ISIZE, NC_IN, NC_OUT, MAX_LAYERS):
 
 # The generator (based on the U-Net architecture)
 def UNET_G(ISIZE, NC_IN, NC_OUT, FIXED_INPUT_SIZE=True):
-    MAX_N_FEATURE = 64 * 8
+    MAX_N_FEATURE = 64 * 8  # max number of filters to use
 
     def BLOCK(X, S, NF_IN, USE_BATNORM=True, NF_OUT=None, NF_NEXT=None):
+        # Encoder: (decreasing size)
+
         assert S >= 2 and S % 2 == 0
-        if NF_NEXT is None:
+        if NF_NEXT is None:  # number of filters in the next layer?
+            # set number of filters to twice the number of filters in the
+            # input, if it isn't more than the max number of filters
             NF_NEXT = min(NF_IN*2, MAX_N_FEATURE)
         if NF_OUT is None:
             NF_OUT = NF_IN
+        # Apply convolution
         X = DN_CONV(NF_NEXT,
                     kernel_size=4,
                     strides=2,
+                    # don't use a bias if batch normalisation will be done
+                    # later, or if s > 2
                     use_bias=(not (USE_BATNORM and S > 2)),
                     padding="same"
                     )(X)
         if S > 2:
+            # apply batch normalisation
             if USE_BATNORM:
                 X = BATNORM()(X, training=1)
+            # apply leaky ReLU with a slope of 0,2
             X2 = LEAKY_RELU(0.2)(X)
+            # continue recursion until size = 2, halving size each time
             X2 = BLOCK(X2, S//2, NF_NEXT)
+            # combine X and X2
+            # this gives the "skip connections" between the encoder layers
+            # and decoder layers.
             X = Concatenate(axis=CH_AXIS)([X, X2])
+
+        # Decoder: (Increasing size)
+        # This happens only when the recursive encoder has reached its maximum
+        # depth (size = 2)
+        # Note the minimum layer size is actually s = 4, as encoding stops when
+        # s = 2
+
+        # Apply ReLU activation
         X = Activation("relu")(X)
+
+        # Apply deconvolution
         X = UP_CONV(NF_OUT,
                     kernel_size=4,
                     strides=2,
                     use_bias=not USE_BATNORM
                     )(X)
         X = Cropping2D(1)(X)
+        # Batch normalisation
         if USE_BATNORM:
             X = BATNORM()(X, training=1)
+        # apply dropout
+        # Randomly drops units which helps prevent overfitting
         if S <= 8:
             X = Dropout(0.5)(X, training=1)
         return X
 
-    S = ISIZE if FIXED_INPUT_SIZE else None
-    X = INPUT = Input(shape=(S, S, NC_IN))
+    S = ISIZE if FIXED_INPUT_SIZE else None  # size
+    X = INPUT = Input(shape=(S, S, NC_IN))  # The input
+    # Apply the U-Net convolution, deconvolution (see above function)
     X = BLOCK(X, ISIZE, NC_IN, False, NF_OUT=NC_OUT, NF_NEXT=64)
+    # Apply tanh activation
     X = Activation('tanh')(X)
 
     return Model(inputs=INPUT, outputs=[X])
 
 
-# %%
-
+# The discriminator model
 NET_D = BASIC_D(ISIZE, NC_IN, NC_OUT, MAX_LAYERS)
+# The generator model
 NET_G = UNET_G(ISIZE, NC_IN, NC_OUT)
 
 REAL_A = NET_G.input
@@ -232,8 +269,6 @@ TRAINING_UPDATES_G = Adam(
 NET_G_TRAIN = K.function([REAL_A, REAL_B],
                          [LOSS_G_FAKE, LOSS_L],
                          TRAINING_UPDATES_G)
-
-# %%
 
 
 def LOAD_DATA(FILE_PATTERN):
@@ -284,15 +319,12 @@ def MINI_BATCH(DATA_AB, BATCH_SIZE, NC_IN, NC_OUT):
         TMP_SIZE = yield EPOCH, DATA_A, DATA_B
 
 
-# %%
-
 LIST_INPUT = LOAD_DATA(IMAGE_PATH_INPUT)
 LIST_OUTPUT = LOAD_DATA(IMAGE_PATH_OUTPUT)
 assert len(LIST_INPUT) == len(LIST_OUTPUT)
 LIST_TOTAL = list(zip(sorted(LIST_INPUT), sorted(LIST_OUTPUT)))
 TRAIN_BATCH = MINI_BATCH(LIST_TOTAL, BATCH_SIZE, NC_IN, NC_OUT)
 
-# %%
 
 T0 = T1 = time.time()
 GEN_ITERS = 0

@@ -1,4 +1,3 @@
-# %%
 import os
 import glob
 from imageio import imread, imsave
