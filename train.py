@@ -75,6 +75,11 @@ CONV_INIT = RandomNormal(0, 0.02)
 GAMMA_INIT = RandomNormal(1., 0.02)
 
 
+# The loss function
+def LOSS_FN(OUTPUT, TARGET):
+    return -K.mean(K.log(OUTPUT+1e-12)*TARGET+K.log(1-OUTPUT+1e-12)*(1-TARGET))
+
+
 # create a convolutional layer with f filters, and arguments a and k
 def DN_CONV(f, *a, **k):
     return Conv2D(f, kernel_initializer=CONV_INIT, *a, **k)
@@ -207,12 +212,6 @@ OUTPUT_D_REAL = NET_D([REAL_A, REAL_B])
 OUTPUT_D_FAKE = NET_D([REAL_A, FAKE_B])
 
 
-def LOSS_FN(OUTPUT, TARGET):
-    return -K.mean(K.log(OUTPUT+1e-12)*TARGET+K.log(1-OUTPUT+1e-12)*(1-TARGET))
-
-
-# LOSS_FN = lambda OUTPUT, TARGET : -K.mean(K.log(OUTPUT+1e-12)*TARGET+K.log(1-OUTPUT+1e-12)*(1-TARGET))
-
 LOSS_D_REAL = LOSS_FN(OUTPUT_D_REAL, K.ones_like(OUTPUT_D_REAL))
 LOSS_D_FAKE = LOSS_FN(OUTPUT_D_FAKE, K.zeros_like(OUTPUT_D_FAKE))
 LOSS_G_FAKE = LOSS_FN(OUTPUT_D_FAKE, K.ones_like(OUTPUT_D_FAKE))
@@ -221,61 +220,71 @@ LOSS_L = K.mean(K.abs(FAKE_B-REAL_B))
 
 
 LOSS_D = LOSS_D_REAL + LOSS_D_FAKE
-TRAINING_UPDATES_D = Adam(lr = 2e-4, beta_1 = 0.5).get_updates(NET_D.trainable_weights, [], LOSS_D)
+TRAINING_UPDATES_D = Adam(lr=2e-4, beta_1=0.5
+                          ).get_updates(NET_D.trainable_weights, [], LOSS_D)
 NET_D_TRAIN = K.function([REAL_A, REAL_B], [LOSS_D/2.0], TRAINING_UPDATES_D)
 
 LOSS_G = LOSS_G_FAKE + 100 * LOSS_L
-TRAINING_UPDATES_G = Adam(lr = 2e-4, beta_1 = 0.5).get_updates(NET_G.trainable_weights, [], LOSS_G)
-NET_G_TRAIN = K.function([REAL_A, REAL_B], [LOSS_G_FAKE, LOSS_L], TRAINING_UPDATES_G)
+TRAINING_UPDATES_G = Adam(
+                          lr=2e-4,
+                          beta_1=0.5
+                          ).get_updates(NET_G.trainable_weights, [], LOSS_G)
+NET_G_TRAIN = K.function([REAL_A, REAL_B],
+                         [LOSS_G_FAKE, LOSS_L],
+                         TRAINING_UPDATES_G)
 
-#%%
+# %%
+
 
 def LOAD_DATA(FILE_PATTERN):
     return glob.glob(FILE_PATTERN)
+
 
 def READ_IMAGE(FN, NC_IN, NC_OUT):
     IMG_A = imread(FN[0])
     IMG_B = imread(FN[1])
     X, Y = np.random.randint(31), np.random.randint(31)
 
-    if NC_IN != 1 :
+    if NC_IN != 1:
         IMG_A = np.pad(IMG_A, ((15, 15), (15, 15), (0, 0)), 'constant')
-        IMG_A = IMG_A[X:X + 1024, Y:Y + 1024,:] / 255.0 * 2 - 1
-    else :
+        IMG_A = IMG_A[X:X + 1024, Y:Y + 1024, :] / 255.0 * 2 - 1
+    else:
         IMG_A = np.pad(IMG_A, 15, 'constant')
         IMG_A = IMG_A[X:X + 1024, Y:Y + 1024] / 255.0 * 2 - 1
 
-    if NC_OUT != 1 :
+    if NC_OUT != 1:
         IMG_B = np.pad(IMG_B, ((15, 15), (15, 15), (0, 0)), 'constant')
-        IMG_B = IMG_B[X:X + 1024, Y:Y + 1024,:] / 255.0 * 2 - 1
-    else :
+        IMG_B = IMG_B[X:X + 1024, Y:Y + 1024, :] / 255.0 * 2 - 1
+    else:
         IMG_B = np.pad(IMG_B, 15, 'constant')
         IMG_B = IMG_B[X:X + 1024, Y:Y + 1024] / 255.0 * 2 - 1
 
     return IMG_A, IMG_B
 
+
 def MINI_BATCH(DATA_AB, BATCH_SIZE, NC_IN, NC_OUT):
     LENGTH = len(DATA_AB)
-    EPOCH = I = 0
+    EPOCH = i = 0
     TMP_SIZE = None
     while True:
         SIZE = TMP_SIZE if TMP_SIZE else BATCH_SIZE
-        if I + SIZE > LENGTH:
+        if i + SIZE > LENGTH:
             shuffle(DATA_AB)
-            I = 0
+            i = 0
             EPOCH += 1
         DATA_A = []
         DATA_B = []
-        for J in range(I, I + SIZE):
-            IMG_A,IMG_B = READ_IMAGE(DATA_AB[J], NC_IN, NC_OUT)
+        for J in range(i, i + SIZE):
+            IMG_A, IMG_B = READ_IMAGE(DATA_AB[J], NC_IN, NC_OUT)
             DATA_A.append(IMG_A)
             DATA_B.append(IMG_B)
         DATA_A = np.float32(DATA_A)
         DATA_B = np.float32(DATA_B)
-        I += SIZE
+        i += SIZE
         TMP_SIZE = yield EPOCH, DATA_A, DATA_B
 
-#%%
+
+# %%
 
 LIST_INPUT = LOAD_DATA(IMAGE_PATH_INPUT)
 LIST_OUTPUT = LOAD_DATA(IMAGE_PATH_OUTPUT)
@@ -283,7 +292,7 @@ assert len(LIST_INPUT) == len(LIST_OUTPUT)
 LIST_TOTAL = list(zip(sorted(LIST_INPUT), sorted(LIST_OUTPUT)))
 TRAIN_BATCH = MINI_BATCH(LIST_TOTAL, BATCH_SIZE, NC_IN, NC_OUT)
 
-#%%
+# %%
 
 T0 = T1 = time.time()
 GEN_ITERS = 0
@@ -294,7 +303,7 @@ ERR_L_SUM = 0
 ERR_G_SUM = 0
 ERR_D_SUM = 0
 
-while GEN_ITERS <= NITERS :
+while GEN_ITERS <= NITERS:
     EPOCH, TRAIN_A, TRAIN_B = next(TRAIN_BATCH)
     TRAIN_A = TRAIN_A.reshape((BATCH_SIZE, ISIZE, ISIZE, NC_IN))
     TRAIN_B = TRAIN_B.reshape((BATCH_SIZE, ISIZE, ISIZE, NC_OUT))
@@ -308,13 +317,19 @@ while GEN_ITERS <= NITERS :
 
     GEN_ITERS += 1
 
-    if GEN_ITERS%DISPLAY_ITERS==0:
-        print('[%d][%d/%d] LOSS_D: %5.3f LOSS_G: %5.3f LOSS_L: %5.3f T: %dsec/%dits, Total T: %d'
-        % (EPOCH, GEN_ITERS, NITERS, ERR_D_SUM/DISPLAY_ITERS, ERR_G_SUM/DISPLAY_ITERS, ERR_L_SUM/DISPLAY_ITERS, time.time()-T1, DISPLAY_ITERS, time.time()-T0))
+    if GEN_ITERS % DISPLAY_ITERS == 0:
+        print('[%d][%d/%d] LOSS_D: %5.3f LOSS_G: %5.3f LOSS_L: %5.3f T:' +
+              ' %dsec/%dits, Total T: %d'
+              % (
+                 EPOCH, GEN_ITERS, NITERS, ERR_D_SUM/DISPLAY_ITERS,
+                 ERR_G_SUM/DISPLAY_ITERS, ERR_L_SUM/DISPLAY_ITERS,
+                 time.time()-T1, DISPLAY_ITERS, time.time()-T0
+                 )
+              )
 
         ERR_L_SUM = 0
         ERR_G_SUM = 0
         ERR_D_SUM = 0
-        DST_MODEL = MODEL_PATH+MODE+'_ITER'+'%07d'%GEN_ITERS+'.h5'
+        DST_MODEL = MODEL_PATH+MODE+'_ITER'+'%07d' % GEN_ITERS+'.h5'
         NET_G.save(DST_MODEL)
         T1 = time.time()
