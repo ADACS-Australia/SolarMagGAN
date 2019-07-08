@@ -12,7 +12,7 @@ import tensorflow as tf
 # initialise tensorflow
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
-tf.Session(config = config)
+tf.Session(config=config)
 
 # initialise KERAS_BACKEND
 K.set_image_data_format('channels_last')

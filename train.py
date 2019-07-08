@@ -49,7 +49,9 @@ ISIZE = 1024  # height of the image
 NC_IN = 1  # number of input channels (1 for greyscale, 3 for RGB)
 NC_OUT = 1  # number of output channels (1 for greyscale, 3 for RGB)
 BATCH_SIZE = 1  # number of images in each batch
-MAX_LAYERS = 3  # 1 for 16, 2 for 34, 3 for 70, 4 for 142, and 5 for 286
+# number of layers
+# 1 for 16, 2 for 34, 3 for 70, 4 for 142, and 5 for 286
+MAX_LAYERS = 3
 
 TRIAL_NAME = 'TEST' + str(MAX_LAYERS)
 
@@ -98,7 +100,7 @@ def LEAKY_RELU(alpha):
     return LeakyReLU(alpha)
 
 
-#  convolution
+#  the descriminator
 def BASIC_D(ISIZE, NC_IN, NC_OUT, MAX_LAYERS):
     INPUT_A, INPUT_B = Input(shape=(ISIZE, ISIZE, NC_IN)),
     Input(shape=(ISIZE, ISIZE, NC_OUT))
@@ -149,41 +151,53 @@ def BASIC_D(ISIZE, NC_IN, NC_OUT, MAX_LAYERS):
     return Model(inputs=[INPUT_A, INPUT_B], outputs=L)
 
 
+# The generator (based on the U-Net architecture)
 def UNET_G(ISIZE, NC_IN, NC_OUT, FIXED_INPUT_SIZE=True):
     MAX_N_FEATURE = 64 * 8
-    def BLOCK(X, S, NF_IN, USE_BATNORM = True, NF_OUT = None, NF_NEXT = None):
-        assert S >= 2 and S%2 == 0
+
+    def BLOCK(X, S, NF_IN, USE_BATNORM=True, NF_OUT=None, NF_NEXT=None):
+        assert S >= 2 and S % 2 == 0
         if NF_NEXT is None:
             NF_NEXT = min(NF_IN*2, MAX_N_FEATURE)
         if NF_OUT is None:
             NF_OUT = NF_IN
-        X = DN_CONV(NF_NEXT, kernel_size = 4, strides = 2, use_bias = (not (USE_BATNORM and S > 2)), padding = "same") (X)
+        X = DN_CONV(NF_NEXT,
+                    kernel_size=4,
+                    strides=2,
+                    use_bias=(not (USE_BATNORM and S > 2)),
+                    padding="same"
+                    )(X)
         if S > 2:
             if USE_BATNORM:
-                X = BATNORM() (X, training = 1)
-            X2 = LEAKY_RELU(0.2) (X)
+                X = BATNORM()(X, training=1)
+            X2 = LEAKY_RELU(0.2)(X)
             X2 = BLOCK(X2, S//2, NF_NEXT)
-            X = Concatenate(axis = CH_AXIS) ([X, X2])
-        X = Activation("relu") (X)
-        X = UP_CONV(NF_OUT, kernel_size = 4, strides = 2, use_bias = not USE_BATNORM) (X)
-        X = Cropping2D(1) (X)
+            X = Concatenate(axis=CH_AXIS)([X, X2])
+        X = Activation("relu")(X)
+        X = UP_CONV(NF_OUT,
+                    kernel_size=4,
+                    strides=2,
+                    use_bias=not USE_BATNORM
+                    )(X)
+        X = Cropping2D(1)(X)
         if USE_BATNORM:
-            X = BATNORM() (X, training = 1)
+            X = BATNORM()(X, training=1)
         if S <= 8:
-            X = Dropout(0.5) (X, training = 1)
+            X = Dropout(0.5)(X, training=1)
         return X
 
     S = ISIZE if FIXED_INPUT_SIZE else None
-    X = INPUT = Input(shape = (S, S, NC_IN))
-    X = BLOCK(X, ISIZE, NC_IN, False, NF_OUT = NC_OUT, NF_NEXT = 64)
-    X = Activation('tanh') (X)
+    X = INPUT = Input(shape=(S, S, NC_IN))
+    X = BLOCK(X, ISIZE, NC_IN, False, NF_OUT=NC_OUT, NF_NEXT=64)
+    X = Activation('tanh')(X)
 
-    return Model(inputs = INPUT, outputs = [X])
+    return Model(inputs=INPUT, outputs=[X])
 
-#%%
+
+# %%
 
 NET_D = BASIC_D(ISIZE, NC_IN, NC_OUT, MAX_LAYERS)
-NET_G = UNET_G (ISIZE, NC_IN, NC_OUT)
+NET_G = UNET_G(ISIZE, NC_IN, NC_OUT)
 
 REAL_A = NET_G.input
 FAKE_B = NET_G.output
@@ -192,7 +206,12 @@ REAL_B = NET_D.inputs[1]
 OUTPUT_D_REAL = NET_D([REAL_A, REAL_B])
 OUTPUT_D_FAKE = NET_D([REAL_A, FAKE_B])
 
-LOSS_FN = lambda OUTPUT, TARGET : -K.mean(K.log(OUTPUT+1e-12)*TARGET+K.log(1-OUTPUT+1e-12)*(1-TARGET))
+
+def LOSS_FN(OUTPUT, TARGET):
+    return -K.mean(K.log(OUTPUT+1e-12)*TARGET+K.log(1-OUTPUT+1e-12)*(1-TARGET))
+
+
+# LOSS_FN = lambda OUTPUT, TARGET : -K.mean(K.log(OUTPUT+1e-12)*TARGET+K.log(1-OUTPUT+1e-12)*(1-TARGET))
 
 LOSS_D_REAL = LOSS_FN(OUTPUT_D_REAL, K.ones_like(OUTPUT_D_REAL))
 LOSS_D_FAKE = LOSS_FN(OUTPUT_D_FAKE, K.zeros_like(OUTPUT_D_FAKE))
