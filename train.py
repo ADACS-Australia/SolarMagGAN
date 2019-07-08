@@ -1,110 +1,155 @@
-#%%
+# %%
 
 import numpy as np
-import os, glob, time
+import os
+import glob
+import time
 from random import shuffle
 from imageio import imread
-
-os.environ['KERAS_BACKEND']        = 'tensorflow'
-os.environ['CUDA_DEVICE_ORDER']    = 'PCI_BUS_ID'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+import tensorflow as tf
 
 import keras.backend as K
-K.set_image_data_format('channels_last')
-CH_AXIS = -1
-
-import tensorflow as tf
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-tf.Session(config = config)
-
 from keras.models import Model
-from keras.layers import Conv2D, ZeroPadding2D, BatchNormalization, Input, Dropout
+from keras.layers import Conv2D, ZeroPadding2D, \
+    BatchNormalization, Input, Dropout
 from keras.layers import Conv2DTranspose, Activation, Cropping2D
 from keras.layers import Concatenate
 from keras.layers.advanced_activations import LeakyReLU
 from keras.initializers import RandomNormal
 from keras.optimizers import Adam
 
-#%% Hyper parameters
 
-NITERS = 6
-DISPLAY_ITERS = 2
+# configure os environment
+os.environ['KERAS_BACKEND'] = 'tensorflow'
+os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
+# configure keras
+K.set_image_data_format('channels_last')
+CH_AXIS = -1
+
+# configure tensorflow
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+tf.Session(config=config)
+
+
+# Hyper parameters
+NITERS = 6  # total number of iterations
+DISPLAY_ITERS = 2  # number of iterations before display
+
+# the input data:
+# (originally AIA or Atmospheric Imaging Assembly)
 INPUT_DATA = 'TEST_INPUT'
+# The data we want to reproduce:
+# (originally HMI or Helioseismic and Magnetic Imager)
 OUTPUT_DATA = 'TEST_OUTPUT'
 
-ISIZE = 1024
-NC_IN = 1
-NC_OUT = 1
-BATCH_SIZE = 1
-MAX_LAYERS = 3 #1 for 16, 2 for 34, 3 for 70, 4 for 142, and 5 for 286
+ISIZE = 1024  # height of the image
+NC_IN = 1  # number of input channels (1 for greyscale, 3 for RGB)
+NC_OUT = 1  # number of output channels (1 for greyscale, 3 for RGB)
+BATCH_SIZE = 1  # number of images in each batch
+MAX_LAYERS = 3  # 1 for 16, 2 for 34, 3 for 70, 4 for 142, and 5 for 286
 
 TRIAL_NAME = 'TEST' + str(MAX_LAYERS)
 
-#%%
+# %%
 
-MODE = INPUT_DATA + '_to_' + OUTPUT_DATA
+MODE = INPUT_DATA + '_to_' + OUTPUT_DATA  # folder name for saving the model
 
-IMAGE_PATH_INPUT = './DATA/TRAIN/'+INPUT_DATA+'/*.png'
-IMAGE_PATH_OUTPUT = './DATA/TRAIN/'+OUTPUT_DATA+'/*.png'
+IMAGE_PATH_INPUT = './DATA/TRAIN/'+INPUT_DATA+'/*.png'  # input file path
+IMAGE_PATH_OUTPUT = './DATA/TRAIN/'+OUTPUT_DATA+'/*.png'  # ouptut file path
 
+# make a folder for the trial if it doesn't already exist
 MODEL_PATH_MAIN = './MODELS/' + TRIAL_NAME + '/'
 os.mkdir(MODEL_PATH_MAIN) if not os.path.exists(MODEL_PATH_MAIN) else None
-
 MODEL_PATH = MODEL_PATH_MAIN + MODE + '/'
 os.mkdir(MODEL_PATH) if not os.path.exists(MODEL_PATH) else None
 
-#%%
-
+# %%
+# generates tensors with a normal distribution with (mean, standard deviation)
+# this is used as a matrix of weights
 CONV_INIT = RandomNormal(0, 0.02)
 GAMMA_INIT = RandomNormal(1., 0.02)
 
 
+# create a convolutional layer with f filters, and arguments a and k
 def DN_CONV(f, *a, **k):
-    return Conv2D(f, kernel_initializer = CONV_INIT, *a, **k)
+    return Conv2D(f, kernel_initializer=CONV_INIT, *a, **k)
 
+
+# create a deconvolutional layer with f filters, and arguments a and k
 def UP_CONV(f, *a, **k):
-    return Conv2DTranspose(f, kernel_initializer = CONV_INIT, *a, **k)
+    return Conv2DTranspose(f, kernel_initializer=CONV_INIT, *a, **k)
 
+
+# applies normalisation such that max is 1, and minimum is 0
 def BATNORM():
-    return BatchNormalization(momentum=0.9, axis=CH_AXIS, epsilon=1.01e-5, gamma_initializer = GAMMA_INIT)
+    return BatchNormalization(
+                              momentum=0.9,
+                              axis=CH_AXIS,
+                              epsilon=1.01e-5,
+                              gamma_initializer=GAMMA_INIT
+                              )
 
+
+# leaky ReLU (y = alpha*x for x < 0, y = x for x > 0)
 def LEAKY_RELU(alpha):
     return LeakyReLU(alpha)
 
+
+#  convolution
 def BASIC_D(ISIZE, NC_IN, NC_OUT, MAX_LAYERS):
-    INPUT_A, INPUT_B = Input(shape = (ISIZE, ISIZE, NC_IN)), Input(shape = (ISIZE, ISIZE, NC_OUT))
-    INPUT = Concatenate(axis=CH_AXIS) ([INPUT_A, INPUT_B])
+    INPUT_A, INPUT_B = Input(shape=(ISIZE, ISIZE, NC_IN)),
+    Input(shape=(ISIZE, ISIZE, NC_OUT))
 
-    if MAX_LAYERS == 0 :
-        N_FEATURE = 1        
-        L = DN_CONV(N_FEATURE, kernel_size = 1, padding = 'same', activation = 'sigmoid') (INPUT)
+    INPUT = Concatenate(axis=CH_AXIS)([INPUT_A, INPUT_B])
 
-    else :
+    if MAX_LAYERS == 0:
+        N_FEATURE = 1
+        L = DN_CONV(N_FEATURE,
+                    kernel_size=1,
+                    padding='same',
+                    activation='sigmoid'
+                    )(INPUT)
+
+    else:
         N_FEATURE = 64
-        L = DN_CONV(N_FEATURE, kernel_size = 4, strides = 2, padding = "same") (INPUT)
-        L = LEAKY_RELU(0.2) (L)
+        L = DN_CONV(N_FEATURE,
+                    kernel_size=4,
+                    strides=2,
+                    padding="same"
+                    )(INPUT)
+        L = LEAKY_RELU(0.2)(L)
 
         for i in range(1, MAX_LAYERS):
             N_FEATURE *= 2
-            L = DN_CONV(N_FEATURE, kernel_size = 4, strides = 2, padding = "same") (L)
-            L = BATNORM() (L, training = 1)
-            L = LEAKY_RELU(0.2) (L)
-            
+            L = DN_CONV(N_FEATURE,
+                        kernel_size=4,
+                        strides=2,
+                        padding="same"
+                        )(L)
+            L = BATNORM()(L, training=1)
+            L = LEAKY_RELU(0.2)(L)
+
         N_FEATURE *= 2
-        L = ZeroPadding2D(1) (L)
-        L = DN_CONV(N_FEATURE, kernel_size = 4, padding = "valid") (L)
-        L = BATNORM() (L, training = 1)
-        L = LEAKY_RELU(0.2) (L)
+        L = ZeroPadding2D(1)(L)
+        L = DN_CONV(N_FEATURE, kernel_size=4, padding="valid")(L)
+        L = BATNORM()(L, training=1)
+        L = LEAKY_RELU(0.2)(L)
 
         N_FEATURE = 1
-        L = ZeroPadding2D(1) (L)
-        L = DN_CONV(N_FEATURE, kernel_size = 4, padding = "valid", activation = 'sigmoid') (L)
-    
-    return Model(inputs = [INPUT_A, INPUT_B], outputs = L)    
+        L = ZeroPadding2D(1)(L)
+        L = DN_CONV(N_FEATURE,
+                    kernel_size=4,
+                    padding="valid",
+                    activation='sigmoid'
+                    )(L)
 
-def UNET_G(ISIZE, NC_IN, NC_OUT, FIXED_INPUT_SIZE = True):    
+    return Model(inputs=[INPUT_A, INPUT_B], outputs=L)
+
+
+def UNET_G(ISIZE, NC_IN, NC_OUT, FIXED_INPUT_SIZE=True):
     MAX_N_FEATURE = 64 * 8
     def BLOCK(X, S, NF_IN, USE_BATNORM = True, NF_OUT = None, NF_NEXT = None):
         assert S >= 2 and S%2 == 0
@@ -118,7 +163,7 @@ def UNET_G(ISIZE, NC_IN, NC_OUT, FIXED_INPUT_SIZE = True):
                 X = BATNORM() (X, training = 1)
             X2 = LEAKY_RELU(0.2) (X)
             X2 = BLOCK(X2, S//2, NF_NEXT)
-            X = Concatenate(axis = CH_AXIS) ([X, X2])            
+            X = Concatenate(axis = CH_AXIS) ([X, X2])
         X = Activation("relu") (X)
         X = UP_CONV(NF_OUT, kernel_size = 4, strides = 2, use_bias = not USE_BATNORM) (X)
         X = Cropping2D(1) (X)
@@ -127,7 +172,7 @@ def UNET_G(ISIZE, NC_IN, NC_OUT, FIXED_INPUT_SIZE = True):
         if S <= 8:
             X = Dropout(0.5) (X, training = 1)
         return X
-    
+
     S = ISIZE if FIXED_INPUT_SIZE else None
     X = INPUT = Input(shape = (S, S, NC_IN))
     X = BLOCK(X, ISIZE, NC_IN, False, NF_OUT = NC_OUT, NF_NEXT = 64)
@@ -254,4 +299,3 @@ while GEN_ITERS <= NITERS :
         DST_MODEL = MODEL_PATH+MODE+'_ITER'+'%07d'%GEN_ITERS+'.h5'
         NET_G.save(DST_MODEL)
         T1 = time.time()
-    

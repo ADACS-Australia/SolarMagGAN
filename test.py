@@ -1,28 +1,34 @@
-#%%
-
+# %%
 import os
-os.environ['KERAS_BACKEND']='tensorflow'
-os.environ['CUDA_DEVICE_ORDER']    = 'PCI_BUS_ID'
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 import glob
 from imageio import imread, imsave
 import numpy as np
 from keras.models import load_model
 import matplotlib.pyplot as plt
 import keras.backend as K
-K.set_image_data_format('channels_last')
-channel_axis = -1
 import time
-
 import tensorflow as tf
+
+# initialise tensorflow
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 tf.Session(config = config)
 
+# initialise KERAS_BACKEND
+K.set_image_data_format('channels_last')
+channel_axis = -1
+
+# initialise os environment
+os.environ['KERAS_BACKEND'] = 'tensorflow'
+os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+
+
 def listdir_nohidden(path):
     return glob.glob(os.path.join(path, '*'))
 
-#%%
+
+# %%
 
 SLEEP_TIME = 1000
 DISPLAY_ITER = 2
@@ -31,10 +37,10 @@ MAX_ITER = 6
 MODE = 'TEST_INPUT_to_TEST_OUTPUT'
 TRIAL_NAME = 'TEST3'
 
-INPUT = 'TEST_INPUT' # input used while training
-INPUT1 = 'TEST_INPUT1'
-INPUT2 = 'TEST_INPUT2'
-OUTPUT = 'TEST_OUTPUT'
+INPUT = 'TEST_INPUT'  # input used while training
+INPUT1 = 'TEST_INPUT1'  # testing input with testing output (near side data)
+INPUT2 = 'TEST_INPUT2'  # testing input without testing output (far side data)
+OUTPUT = 'TEST_OUTPUT'  # testing output for INPUT1
 
 ISIZE = 1024
 NC_IN = 1
@@ -94,9 +100,9 @@ def TUMF_VALUE(IMAGE, RSUN, SATURATION, THRESHOLD):
     VALUE_NEGATIVE = 0
 
     IMAGE_SCALE = SCALE(IMAGE, RANGE_IN = [0., 255.], RANGE_OUT = [-SATURATION, SATURATION])
-    
+
     SIZE_X, SIZE_Y = IMAGE_SCALE.shape[0], IMAGE_SCALE.shape[1]
-    
+
     for I in range(SIZE_X):
         for J in range(SIZE_Y):
             if (I-SIZE_X/2) ** 2. + (J-SIZE_Y/2) ** 2. < RSUN ** 2. :
@@ -106,18 +112,18 @@ def TUMF_VALUE(IMAGE, RSUN, SATURATION, THRESHOLD):
                     VALUE_NEGATIVE += IMAGE_SCALE[I, J]
                 else :
                     None
-                    
+
     FACT =  (695500./RSUN) * (695500./RSUN) * 1000 * 1000 * 100 * 100
-    
+
     FLUX_POSITIVE = VALUE_POSITIVE * FACT
     FLUX_NEGATIVE = VALUE_NEGATIVE * FACT
     FLUX_TOTAL = FLUX_POSITIVE + abs(FLUX_NEGATIVE)
-    
+
     return FLUX_POSITIVE, FLUX_NEGATIVE, FLUX_TOTAL
 
 
 #%%
-        
+
 ITER = DISPLAY_ITER
 while ITER <= MAX_ITER :
 
@@ -130,7 +136,7 @@ while ITER <= MAX_ITER :
 
     SAVE_PATH2 = RESULT_PATH2 + 'ITER' + SITER + '/'
     os.mkdir(SAVE_PATH2) if not os.path.exists(SAVE_PATH2) else None
-    
+
     FIGURE_PATH = FIGURE_PATH_MAIN + 'ITER' + SITER
 
 
@@ -150,7 +156,7 @@ while ITER <= MAX_ITER :
     NET_G_GENERATE = K.function([REAL_A], [FAKE_B])
     def NET_G_GEN(A):
         return np.concatenate([NET_G_GENERATE([A[I:I+1]])[0] for I in range(A.shape[0])], axis=0)
-    
+
     UTMF_REAL = []
     UTMF_FAKE = []
 
@@ -166,9 +172,9 @@ while ITER <= MAX_ITER :
         SAVE_NAME = SAVE_PATH1 + OP1 + '_' + str(I) + '.png'
         imsave(SAVE_NAME, FAKE)
 
-        RP, RN, RT = TUMF_VALUE(REAL, RSUN, SATURATION, THRESHOLD)        
+        RP, RN, RT = TUMF_VALUE(REAL, RSUN, SATURATION, THRESHOLD)
         FP, FN, FT = TUMF_VALUE(FAKE, RSUN, SATURATION, THRESHOLD)
-        
+
         UTMF_REAL.append(RT)
         UTMF_FAKE.append(FT)
 
@@ -254,7 +260,7 @@ while ITER <= MAX_ITER :
 
         fig2.savefig(FIGURE_PATH + '_FIGURE2.png')
         plt.close(fig2)
-    
+
         CC = np.corrcoef(UTMF_REAL, UTMF_FAKE)[0, 1]
         fig3 = plt.figure()
         fig3.suptitle('CC : %6.3f' % (CC))
@@ -270,9 +276,9 @@ while ITER <= MAX_ITER :
         U2 = np.array(imread(INPUT2_IMAGE_LIST[1]))
         U3 = np.array(imread(INPUT_TRAIN_IMAGE_LIST[0]))
         U4 = np.array(imread(INPUT_TRAIN_IMAGE_LIST[1]))
-        
+
         OUTPUT_TRAIN_IMAGE_LIST = listdir_nohidden('./DATA/TRAIN/'+OUTPUT +'/')
-        
+
         D1 = np.array(imread(SAVE_PATH2 + '/' + OP2 + '_0.png'))
         D2 = np.array(imread(SAVE_PATH2 + '/' + OP2 + '_1.png'))
         D3 = np.array(imread(OUTPUT_TRAIN_IMAGE_LIST[0]))
@@ -322,5 +328,3 @@ while ITER <= MAX_ITER :
     K.clear_session()
 
     ITER += DISPLAY_ITER
-       
-
