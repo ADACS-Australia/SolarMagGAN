@@ -49,7 +49,7 @@ ISIZE = 1024  # height of the image
 NC_IN = 1  # number of input channels (1 for greyscale, 3 for RGB)
 NC_OUT = 1  # number of output channels (1 for greyscale, 3 for RGB)
 BATCH_SIZE = 1  # number of images in each batch
-# number of layers
+# max layers in the discriminator
 # 1 for 16, 2 for 34, 3 for 70, 4 for 142, and 5 for 286
 MAX_LAYERS = 3
 
@@ -102,8 +102,8 @@ def LEAKY_RELU(alpha):
 
 #  the descriminator
 def BASIC_D(ISIZE, NC_IN, NC_OUT, MAX_LAYERS):
-    INPUT_A, INPUT_B = Input(shape=(ISIZE, ISIZE, NC_IN)),
-    Input(shape=(ISIZE, ISIZE, NC_OUT))
+    INPUT_A, INPUT_B = Input(shape=(ISIZE, ISIZE, NC_IN)),\
+        Input(shape=(ISIZE, ISIZE, NC_OUT))
 
     INPUT = Concatenate(axis=CH_AXIS)([INPUT_A, INPUT_B])
 
