@@ -241,45 +241,66 @@ NET_D = BASIC_D(ISIZE, NC_IN, NC_OUT, MAX_LAYERS)
 # The generator model
 NET_G = UNET_G(ISIZE, NC_IN, NC_OUT)
 
-REAL_A = NET_G.input
-FAKE_B = NET_G.output
-REAL_B = NET_D.inputs[1]
+# tensor placeholders?
+REAL_A = NET_G.input  # generator input (AIA)
+FAKE_B = NET_G.output  # generator output (fake HMI)
+REAL_B = NET_D.inputs[1]  # descriminator input (real HMI)
 
+# output of the discriminator for AIA and real HMI
 OUTPUT_D_REAL = NET_D([REAL_A, REAL_B])
+# output of the discriminator for AIA and fake HMI
 OUTPUT_D_FAKE = NET_D([REAL_A, FAKE_B])
 
-
+# set initial values for the loss
+# ones_like creates a tensor of the same shape full of ones
+# zeros_like creates a tensor of the same shape full of zeros
+# as the discriminator gives the probability that the input is a real HMI
+# picture, we want it to out put 1 when the input is real and 0 when the
+# input is fake.
 LOSS_D_REAL = LOSS_FN(OUTPUT_D_REAL, K.ones_like(OUTPUT_D_REAL))
 LOSS_D_FAKE = LOSS_FN(OUTPUT_D_FAKE, K.zeros_like(OUTPUT_D_FAKE))
+# while the generator, we want the discriminator to guess that the
+# generator output is the real HMI, which corresponds to the discriminator
+# outputting 1:
 LOSS_G_FAKE = LOSS_FN(OUTPUT_D_FAKE, K.ones_like(OUTPUT_D_FAKE))
 
+# total average difference between the real and generated HMIs
 LOSS_L = K.mean(K.abs(FAKE_B-REAL_B))
 
-
+# Total loss of the discriminator
 LOSS_D = LOSS_D_REAL + LOSS_D_FAKE
+# gives the updates for the discriminator training
 TRAINING_UPDATES_D = Adam(lr=2e-4, beta_1=0.5
                           ).get_updates(NET_D.trainable_weights, [], LOSS_D)
+# creates a function that trains the discriminator
 NET_D_TRAIN = K.function([REAL_A, REAL_B], [LOSS_D/2.0], TRAINING_UPDATES_D)
 
+# The total loss of G, which includes the difference between the real and
+# generated HMIs, as well as the loss because of the descriminator
 LOSS_G = LOSS_G_FAKE + 100 * LOSS_L
+
+# operation to update the gradient of the generator using the adam optimizer
 TRAINING_UPDATES_G = Adam(
                           lr=2e-4,
                           beta_1=0.5
                           ).get_updates(NET_G.trainable_weights, [], LOSS_G)
+# function to train the generator
 NET_G_TRAIN = K.function([REAL_A, REAL_B],
                          [LOSS_G_FAKE, LOSS_L],
                          TRAINING_UPDATES_G)
 
-
+# returns list of files that match FILE_PATTERN
 def LOAD_DATA(FILE_PATTERN):
     return glob.glob(FILE_PATTERN)
 
-
+# FN = filenames, NC_IN = #channels in input, NC_OUT = #channels in output
+# This function essentially reads the image, and shifts it slightly by up
+# to 15 pixels any direction before returning it. This is probably to
+# prevent overfitting
 def READ_IMAGE(FN, NC_IN, NC_OUT):
     IMG_A = imread(FN[0])
     IMG_B = imread(FN[1])
     X, Y = np.random.randint(31), np.random.randint(31)
-
     if NC_IN != 1:
         IMG_A = np.pad(IMG_A, ((15, 15), (15, 15), (0, 0)), 'constant')
         IMG_A = IMG_A[X:X + 1024, Y:Y + 1024, :] / 255.0 * 2 - 1
