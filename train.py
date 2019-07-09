@@ -349,19 +349,19 @@ while GEN_ITERS <= NITERS:
 
     GEN_ITERS += 1
 
-    if GEN_ITERS % DISPLAY_ITERS == 0:
-        print('[%d][%d/%d] LOSS_D: %5.3f LOSS_G: %5.3f LOSS_L: %5.3f T:' +
-              ' %dsec/%dits, Total T: %d'
-              % (
-                 EPOCH, GEN_ITERS, NITERS, ERR_D_SUM/DISPLAY_ITERS,
-                 ERR_G_SUM/DISPLAY_ITERS, ERR_L_SUM/DISPLAY_ITERS,
-                 time.time()-T1, DISPLAY_ITERS, time.time()-T0
-                 )
-              )
-
-        ERR_L_SUM = 0
-        ERR_G_SUM = 0
-        ERR_D_SUM = 0
-        DST_MODEL = MODEL_PATH+MODE+'_ITER'+'%07d' % GEN_ITERS+'.h5'
-        NET_G.save(DST_MODEL)
-        T1 = time.time()
+if GEN_ITERS % DISPLAY_ITERS == 0:
+    print('[%d][%d/%d] LOSS_D: %5.3f LOSS_G: %5.3f LOSS_L: %5.3f T:\
+           %dsec/%dits, Total T: %d'
+          % (
+             EPOCH, GEN_ITERS, NITERS, ERR_D_SUM/DISPLAY_ITERS,
+             ERR_G_SUM/DISPLAY_ITERS, ERR_L_SUM/DISPLAY_ITERS,
+             time.time()-T1, DISPLAY_ITERS, time.time()-T0
+             )
+          )
+        
+    ERR_L_SUM = 0
+    ERR_G_SUM = 0
+    ERR_D_SUM = 0
+    DST_MODEL = MODEL_PATH+MODE+'_ITER'+'%07d' % GEN_ITERS+'.h5'
+    NET_G.save(DST_MODEL)
+    T1 = time.time()
