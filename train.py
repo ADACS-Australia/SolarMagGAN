@@ -382,7 +382,6 @@ while GEN_ITERS <= NITERS:
     ERR_G_SUM += ERR_G
     ERR_L_SUM += ERR_L
     
-    breakpoint()
     GEN_ITERS += 1
     
     # print training summary and save model

@@ -35,15 +35,19 @@ MODE = 'TEST_INPUT_to_TEST_OUTPUT'
 TRIAL_NAME = 'TEST3'
 
 INPUT = 'TEST_INPUT'  # input used while training
-INPUT1 = 'TEST_INPUT1'  # testing input with testing output (near side data)
-INPUT2 = 'TEST_INPUT2'  # testing input without testing output (far side data)
-OUTPUT = 'TEST_OUTPUT'  # testing output for INPUT1
+# testing input which has a corresponding output (near side AIA)
+INPUT1 = 'TEST_INPUT1'
+# testing input which does not have a corresponding (far side EUV)
+INPUT2 = 'TEST_INPUT2'
+# corresponding output for INPUT1 (near side HMI)
+OUTPUT = 'TEST_OUTPUT'
 
 ISIZE = 1024  # input size
-NC_IN = 1  # number of input channels
-NC_OUT = 1  # number of output channels
+NC_IN = 1  # number of channels in the output
+NC_OUT = 1  # number of channels in the input
 BATCH_SIZE = 1  # batch size
 
+# used for calculating the total unsigned magnetic flux (TUMF)
 RSUN = 392
 SATURATION = 100
 THRESHOLD = 10
@@ -51,28 +55,32 @@ THRESHOLD = 10
 OP1 = INPUT1 + '_to_' + OUTPUT
 OP2 = INPUT2 + '_to_' + OUTPUT
 
-IMAGE_PATH1 = './DATA/TEST/' + INPUT1 + '/*.png'
-IMAGE_PATH2 = './DATA/TEST/' + INPUT2 + '/*.png'
-IMAGE_PATH3 = './DATA/TEST/' + OUTPUT + '/*.png'
+IMAGE_PATH1 = './DATA/TEST/' + INPUT1 + '/*.png'  # INPUT1 data file path
+IMAGE_PATH2 = './DATA/TEST/' + INPUT2 + '/*.png'  # INPUT2 data file path
+IMAGE_PATH3 = './DATA/TEST/' + OUTPUT + '/*.png'  # OUTPUT data file path
 
+# finds and sorts the filenames for INPUT1, INPUT2 and OUTPUT respectively
 IMAGE_LIST1 = sorted(glob.glob(IMAGE_PATH1))
 IMAGE_LIST2 = sorted(glob.glob(IMAGE_PATH2))
 IMAGE_LIST3 = sorted(glob.glob(IMAGE_PATH3))
 
-# file path for the results
 RESULT_PATH_MAIN = './RESULTS/' + TRIAL_NAME + '/'
 os.mkdir(RESULT_PATH_MAIN) if not os.path.exists(RESULT_PATH_MAIN) else None
 
+# file path for the results of INPUT1 to OUTPUT (generating HMI from nearside)
 RESULT_PATH1 = RESULT_PATH_MAIN + OP1 + '/'
 os.mkdir(RESULT_PATH1) if not os.path.exists(RESULT_PATH1) else None
 
+# file path for the results of INPUT2 to OUTPUT (generating HMI from farside)
 RESULT_PATH2 = RESULT_PATH_MAIN + OP2 + '/'
 os.mkdir(RESULT_PATH2) if not os.path.exists(RESULT_PATH2) else None
 
+# file path for the figures
 FIGURE_PATH_MAIN = './FIGURES/' + TRIAL_NAME + '/'
 os.mkdir(FIGURE_PATH_MAIN) if not os.path.exists(FIGURE_PATH_MAIN) else None
 
 
+# This is used for finding the TUMF value
 def SCALE(DATA, RANGE_IN, RANGE_OUT):
 
     DOMAIN = [RANGE_IN[0], RANGE_OUT[1]]
@@ -90,7 +98,7 @@ def SCALE(DATA, RANGE_IN, RANGE_OUT):
 
     return INTERP(UNINTERP(DATA))
 
-
+# finds the TUMF value
 def TUMF_VALUE(IMAGE, RSUN, SATURATION, THRESHOLD):
     VALUE_POSITIVE = 0
     VALUE_NEGATIVE = 0
@@ -122,20 +130,26 @@ def TUMF_VALUE(IMAGE, RSUN, SATURATION, THRESHOLD):
     return FLUX_POSITIVE, FLUX_NEGATIVE, FLUX_TOTAL
 
 
+# during training, the model was saved every DISPLAY_ITER steps
+# as such, test every DISPLAY_ITER.
 ITER = DISPLAY_ITER
 while ITER <= MAX_ITER:
 
-    SITER = '%07d' % ITER
-
-    MODEL_NAME = './MODELS/' + TRIAL_NAME + '/' + MODE + '/' + MODE + '_ITER'
-    + SITER + '.h5'
-
+    SITER = '%07d' % ITER  # string representing the itteration
+    
+    # file path for the model of current itteration
+    MODEL_NAME = './MODELS/' + TRIAL_NAME + '/' + MODE + '/' + MODE + \
+        '_ITER' + SITER + '.h5'
+    
+    # file path to save the generated outputs from INPUT1 (nearside)
     SAVE_PATH1 = RESULT_PATH1 + 'ITER' + SITER + '/'
     os.mkdir(SAVE_PATH1) if not os.path.exists(SAVE_PATH1) else None
 
+    # file path to save the generated outputs from INPUT2 (farside)
     SAVE_PATH2 = RESULT_PATH2 + 'ITER' + SITER + '/'
     os.mkdir(SAVE_PATH2) if not os.path.exists(SAVE_PATH2) else None
 
+    # file path to save the figures
     FIGURE_PATH = FIGURE_PATH_MAIN + 'ITER' + SITER
 
     EX = 0
@@ -147,28 +161,36 @@ while ITER <= MAX_ITER:
             print('Waiting Iter ' + str(ITER) + ' ...')
             time.sleep(SLEEP_TIME)
 
+    # load the model
     MODEL = load_model(MODEL_NAME)
 
     REAL_A = MODEL.input
     FAKE_B = MODEL.output
+    # function that evaluates the model
     NET_G_GENERATE = K.function([REAL_A], [FAKE_B])
 
+    # generates the output (HMI) based on input image (A)
     def NET_G_GEN(A):
-        return np.concatenate([NET_G_GENERATE([A[I:I+1]])[0]
-                              for I in range(A.shape[0])], axis=0)
+        output = [NET_G_GENERATE([A[I:I+1]])[0] for I in range(A.shape[0])]
+        return np.concatenate(output, axis=0)
 
     UTMF_REAL = []
     UTMF_FAKE = []
 
+
     for I in range(len(IMAGE_LIST1)):
+        # input image (AIA nearside)
         IMG = np.float32(imread(IMAGE_LIST1[I]) / 255.0 * 2 - 1)
+        # desired image (HMI nearside)
         REAL = np.float32(imread(IMAGE_LIST3[I]))
         DATE = IMAGE_LIST1[I][-19:-4]
+        # reshapes IMG tensor to (BATCH_SIZE, ISIZE, ISIZE, NC_IN)
         IMG.shape = (BATCH_SIZE, ISIZE, ISIZE, NC_IN)
+        # output image (generated HMI)
         FAKE = NET_G_GEN(IMG)
         FAKE = ((FAKE[0] + 1) / 2.0 * 255.).clip(0, 255).astype('uint8')
         FAKE.shape = (ISIZE, ISIZE) if NC_IN == 1 else (ISIZE, ISIZE, NC_OUT)
-#        SAVE_NAME = SAVE_PATH1 + OP1 + '_' + DATE + '.png'
+        # SAVE_NAME = SAVE_PATH1 + OP1 + '_' + DATE + '.png'
         SAVE_NAME = SAVE_PATH1 + OP1 + '_' + str(I) + '.png'
         imsave(SAVE_NAME, FAKE)
 
@@ -177,6 +199,7 @@ while ITER <= MAX_ITER:
 
         UTMF_REAL.append(RT)
         UTMF_FAKE.append(FT)
+        breakpoint()
 
     for J in range(len(IMAGE_LIST2)):
         IMG = np.float32(imread(IMAGE_LIST2[J]) / 255.0 * 2 - 1)
