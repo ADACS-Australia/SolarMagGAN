@@ -318,18 +318,23 @@ def READ_IMAGE(FN, NC_IN, NC_OUT):
     return IMG_A, IMG_B
 
 
+# create mini batches for training (actually creates a generator
+# that generates each element of the batch)
 def MINI_BATCH(DATA_AB, BATCH_SIZE, NC_IN, NC_OUT):
     LENGTH = len(DATA_AB)
     EPOCH = i = 0
     TMP_SIZE = None
     while True:
         SIZE = TMP_SIZE if TMP_SIZE else BATCH_SIZE
+        # if we reach the end of the data (which corresponds to an
+        # epoch), shuffle data and begin again
         if i + SIZE > LENGTH:
             shuffle(DATA_AB)
             i = 0
             EPOCH += 1
         DATA_A = []
         DATA_B = []
+        # make batches of length: SIZE
         for J in range(i, i + SIZE):
             IMG_A, IMG_B = READ_IMAGE(DATA_AB[J], NC_IN, NC_OUT)
             DATA_A.append(IMG_A)
@@ -340,13 +345,17 @@ def MINI_BATCH(DATA_AB, BATCH_SIZE, NC_IN, NC_OUT):
         TMP_SIZE = yield EPOCH, DATA_A, DATA_B
 
 
+# input data
 LIST_INPUT = LOAD_DATA(IMAGE_PATH_INPUT)
+# output data
 LIST_OUTPUT = LOAD_DATA(IMAGE_PATH_OUTPUT)
 assert len(LIST_INPUT) == len(LIST_OUTPUT)
+# zips the data such that each element is a (input, output) pair
 LIST_TOTAL = list(zip(sorted(LIST_INPUT), sorted(LIST_OUTPUT)))
+# creates a generator to use for training
 TRAIN_BATCH = MINI_BATCH(LIST_TOTAL, BATCH_SIZE, NC_IN, NC_OUT)
 
-
+# initialise training variables
 T0 = T1 = time.time()
 GEN_ITERS = 0
 ERR_L = 0
@@ -356,20 +365,27 @@ ERR_L_SUM = 0
 ERR_G_SUM = 0
 ERR_D_SUM = 0
 
+# training:
 while GEN_ITERS <= NITERS:
     EPOCH, TRAIN_A, TRAIN_B = next(TRAIN_BATCH)
+    # input data set
     TRAIN_A = TRAIN_A.reshape((BATCH_SIZE, ISIZE, ISIZE, NC_IN))
+    # output data set
     TRAIN_B = TRAIN_B.reshape((BATCH_SIZE, ISIZE, ISIZE, NC_OUT))
-
+    
+    # descriminator training and error
     ERR_D,  = NET_D_TRAIN([TRAIN_A, TRAIN_B])
     ERR_D_SUM += ERR_D
-
+    
+    # generator training and error
     ERR_G, ERR_L = NET_G_TRAIN([TRAIN_A, TRAIN_B])
     ERR_G_SUM += ERR_G
     ERR_L_SUM += ERR_L
-
+    
+    breakpoint()
     GEN_ITERS += 1
-
+    
+    # print training summary and save model
     if GEN_ITERS % DISPLAY_ITERS == 0:
         print('[%d][%d/%d] LOSS_D: %5.3f LOSS_G: %5.3f LOSS_L: %5.3f T:'
               '%dsec/%dits, Total T: %d'
