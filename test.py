@@ -98,6 +98,7 @@ def SCALE(DATA, RANGE_IN, RANGE_OUT):
 
     return INTERP(UNINTERP(DATA))
 
+
 # finds the TUMF value
 def TUMF_VALUE(IMAGE, RSUN, SATURATION, THRESHOLD):
     VALUE_POSITIVE = 0
@@ -136,11 +137,11 @@ ITER = DISPLAY_ITER
 while ITER <= MAX_ITER:
 
     SITER = '%07d' % ITER  # string representing the itteration
-    
+
     # file path for the model of current itteration
     MODEL_NAME = './MODELS/' + TRIAL_NAME + '/' + MODE + '/' + MODE + \
         '_ITER' + SITER + '.h5'
-    
+
     # file path to save the generated outputs from INPUT1 (nearside)
     SAVE_PATH1 = RESULT_PATH1 + 'ITER' + SITER + '/'
     os.mkdir(SAVE_PATH1) if not os.path.exists(SAVE_PATH1) else None
@@ -177,7 +178,6 @@ while ITER <= MAX_ITER:
     UTMF_REAL = []
     UTMF_FAKE = []
 
-
     for I in range(len(IMAGE_LIST1)):
         # input image (AIA nearside)
         IMG = np.float32(imread(IMAGE_LIST1[I]) / 255.0 * 2 - 1)
@@ -199,7 +199,6 @@ while ITER <= MAX_ITER:
 
         UTMF_REAL.append(RT)
         UTMF_FAKE.append(FT)
-        breakpoint()
 
     for J in range(len(IMAGE_LIST2)):
         IMG = np.float32(imread(IMAGE_LIST2[J]) / 255.0 * 2 - 1)

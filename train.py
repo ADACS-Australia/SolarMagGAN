@@ -289,9 +289,11 @@ NET_G_TRAIN = K.function([REAL_A, REAL_B],
                          [LOSS_G_FAKE, LOSS_L],
                          TRAINING_UPDATES_G)
 
+
 # returns list of files that match FILE_PATTERN
 def LOAD_DATA(FILE_PATTERN):
     return glob.glob(FILE_PATTERN)
+
 
 # FN = filenames, NC_IN = #channels in input, NC_OUT = #channels in output
 # This function essentially reads the image, and shifts it slightly by up
@@ -372,18 +374,18 @@ while GEN_ITERS <= NITERS:
     TRAIN_A = TRAIN_A.reshape((BATCH_SIZE, ISIZE, ISIZE, NC_IN))
     # output data set
     TRAIN_B = TRAIN_B.reshape((BATCH_SIZE, ISIZE, ISIZE, NC_OUT))
-    
+
     # descriminator training and error
     ERR_D,  = NET_D_TRAIN([TRAIN_A, TRAIN_B])
     ERR_D_SUM += ERR_D
-    
+
     # generator training and error
     ERR_G, ERR_L = NET_G_TRAIN([TRAIN_A, TRAIN_B])
     ERR_G_SUM += ERR_G
     ERR_L_SUM += ERR_L
-    
+
     GEN_ITERS += 1
-    
+
     # print training summary and save model
     if GEN_ITERS % DISPLAY_ITERS == 0:
         print('[%d][%d/%d] LOSS_D: %5.3f LOSS_G: %5.3f LOSS_L: %5.3f T:'
