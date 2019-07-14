@@ -65,19 +65,19 @@ IMAGE_LIST2 = sorted(glob.glob(IMAGE_PATH2))
 IMAGE_LIST3 = sorted(glob.glob(IMAGE_PATH3))
 
 RESULT_PATH_MAIN = './RESULTS/' + TRIAL_NAME + '/'
-os.mkdir(RESULT_PATH_MAIN) if not os.path.exists(RESULT_PATH_MAIN) else None
+# os.mkdir(RESULT_PATH_MAIN) if not os.path.exists(RESULT_PATH_MAIN) else None
 
 # file path for the results of INPUT1 to OUTPUT (generating HMI from nearside)
 RESULT_PATH1 = RESULT_PATH_MAIN + OP1 + '/'
-os.mkdir(RESULT_PATH1) if not os.path.exists(RESULT_PATH1) else None
+os.makedirs(RESULT_PATH1) if not os.path.exists(RESULT_PATH1) else None
 
 # file path for the results of INPUT2 to OUTPUT (generating HMI from farside)
 RESULT_PATH2 = RESULT_PATH_MAIN + OP2 + '/'
-os.mkdir(RESULT_PATH2) if not os.path.exists(RESULT_PATH2) else None
+os.makedirs(RESULT_PATH2) if not os.path.exists(RESULT_PATH2) else None
 
 # file path for the figures
 FIGURE_PATH_MAIN = './FIGURES/' + TRIAL_NAME + '/'
-os.mkdir(FIGURE_PATH_MAIN) if not os.path.exists(FIGURE_PATH_MAIN) else None
+os.makedirs(FIGURE_PATH_MAIN) if not os.path.exists(FIGURE_PATH_MAIN) else None
 
 
 # This is used for finding the TUMF value

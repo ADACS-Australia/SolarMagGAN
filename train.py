@@ -61,9 +61,9 @@ IMAGE_PATH_OUTPUT = './DATA/TRAIN/'+OUTPUT_DATA+'/*.png'  # ouptut file path
 
 # make a folder for the trial if it doesn't already exist
 MODEL_PATH_MAIN = './MODELS/' + TRIAL_NAME + '/'
-os.mkdir(MODEL_PATH_MAIN) if not os.path.exists(MODEL_PATH_MAIN) else None
+# os.mkdir(MODEL_PATH_MAIN) if not os.path.exists(MODEL_PATH_MAIN) else None
 MODEL_PATH = MODEL_PATH_MAIN + MODE + '/'
-os.mkdir(MODEL_PATH) if not os.path.exists(MODEL_PATH) else None
+os.makedirs(MODEL_PATH) if not os.path.exists(MODEL_PATH) else None
 
 
 # generates tensors with a normal distribution with (mean, standard deviation)
