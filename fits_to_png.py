@@ -21,11 +21,12 @@ def resize_and_save_to_png(name, fits_path, png_path, min, max, w, h):
     image_data = np.clip(image_data, min, max)
     # translate data so it's between (0, max-min):
     image_data -= min
-    # normalise data so it's between (0, 255), and convert to uint8:
-    image_data = (image_data*255/(max - min)).astype(np.uint8)
+    # normalise data
+    image_data = image_data/(max - min)
     # set all nan values to 0
     # image_data = np.nan_to_num(image_data)
-    image = Image.fromarray(image_data, mode="L")
+    # format data, and convert to image
+    image = Image.fromarray(np.uint8(image_data * 255) , 'L')
     image = image.resize((w, h), Image.LANCZOS)
     # flip image to match original orientation.
     image = image.transpose(Image.FLIP_TOP_BOTTOM)
