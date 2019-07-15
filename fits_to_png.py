@@ -27,6 +27,8 @@ def resize_and_save_to_png(name, fits_path, png_path, min, max, w, h):
     # image_data = np.nan_to_num(image_data)
     image = Image.fromarray(image_data, mode="L")
     image = image.resize((w, h), Image.LANCZOS)
+    # flip image to match original orientation.
+    image = image.transpose(Image.FLIP_TOP_BOTTOM)
     image.save(png_path + name + ".png")
 
 
