@@ -23,8 +23,7 @@ def resize_and_save_to_png(name, fits_path, png_path, min, max, w, h):
     image_data -= min
     # normalise data
     image_data = image_data/(max - min)
-    # set all nan values to 0
-    # image_data = np.nan_to_num(image_data)
+
     # format data, and convert to image
     image = Image.fromarray(np.uint8(image_data * 255) , 'L')
     image = image.resize((w, h), Image.LANCZOS)
