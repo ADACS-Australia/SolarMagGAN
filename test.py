@@ -183,15 +183,15 @@ while ITER <= MAX_ITER:
         IMG = np.float32(imread(IMAGE_LIST1[I]) / 255.0 * 2 - 1)
         # desired image (HMI nearside)
         REAL = np.float32(imread(IMAGE_LIST3[I]))
-        DATE = IMAGE_LIST1[I][-19:-4]
+        INFO = IMAGE_LIST1[I].split('.')
+        DATE = INFO[2].replace('-', '').replace('_', '').replace('T', '')[:10]
         # reshapes IMG tensor to (BATCH_SIZE, ISIZE, ISIZE, NC_IN)
         IMG.shape = (BATCH_SIZE, ISIZE, ISIZE, NC_IN)
         # output image (generated HMI)
         FAKE = NET_G_GEN(IMG)
         FAKE = ((FAKE[0] + 1) / 2.0 * 255.).clip(0, 255).astype('uint8')
         FAKE.shape = (ISIZE, ISIZE) if NC_IN == 1 else (ISIZE, ISIZE, NC_OUT)
-        # SAVE_NAME = SAVE_PATH1 + OP1 + '_' + DATE + '.png'
-        SAVE_NAME = SAVE_PATH1 + OP1 + '_' + str(I) + '.png'
+        SAVE_NAME = SAVE_PATH1 + OP1 + '_' + DATE + '.png'
         imsave(SAVE_NAME, FAKE)
 
         RP, RN, RT = TUMF_VALUE(REAL, RSUN, SATURATION, THRESHOLD)
@@ -202,13 +202,13 @@ while ITER <= MAX_ITER:
 
     for J in range(len(IMAGE_LIST2)):
         IMG = np.float32(imread(IMAGE_LIST2[J]) / 255.0 * 2 - 1)
-        DATE = IMAGE_LIST2[J][-19:-4]
+        INFO = IMAGE_LIST2[I].split('.')
+        DATE = INFO[2].replace('-', '').replace('_', '').replace('T', '')[:10]
         IMG.shape = (BATCH_SIZE, ISIZE, ISIZE, NC_IN)
         FAKE = NET_G_GEN(IMG)
         FAKE = ((FAKE[0] + 1) / 2.0 * 255.).clip(0, 255).astype('uint8')
         FAKE.shape = (ISIZE, ISIZE) if NC_IN == 1 else (ISIZE, ISIZE, NC_OUT)
-        # SAVE_NAME = SAVE_PATH2 + OP2 + '_' + DATE + '.png'
-        SAVE_NAME = SAVE_PATH2 + OP2 + '_' + str(J) + '.png'
+        SAVE_NAME = SAVE_PATH2 + OP2 + '_' + DATE + '.png'
         imsave(SAVE_NAME, FAKE)
 
     def MAKE_FIGURE():

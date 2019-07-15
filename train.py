@@ -33,15 +33,15 @@ tf.Session(config=config)
 
 
 # Hyper parameters
-NITERS = 6  # total number of iterations
-DISPLAY_ITERS = 2  # number of iterations before display
+NITERS = 5000  # total number of iterations
+DISPLAY_ITERS = 50  # number of iterations before display
 
 # the input data:
 # (originally AIA or Atmospheric Imaging Assembly)
-INPUT_DATA = 'TEST_INPUT'
+INPUT_DATA = 'AIA'
 # The data we want to reproduce:
 # (originally HMI or Helioseismic and Magnetic Imager)
-OUTPUT_DATA = 'TEST_OUTPUT'
+OUTPUT_DATA = 'HMI'
 
 ISIZE = 1024  # height of the image
 NC_IN = 1  # number of input channels (1 for greyscale, 3 for RGB)
@@ -51,7 +51,7 @@ BATCH_SIZE = 1  # number of images in each batch
 # 1 for 16, 2 for 34, 3 for 70, 4 for 142, and 5 for 286 (receptive field size)
 MAX_LAYERS = 3
 
-TRIAL_NAME = 'TEST' + str(MAX_LAYERS)
+TRIAL_NAME = 'Small_scale_test_1'
 
 
 MODE = INPUT_DATA + '_to_' + OUTPUT_DATA  # folder name for saving the model
