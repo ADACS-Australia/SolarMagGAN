@@ -1,43 +1,65 @@
+from PIL import Image
 from astropy.io import fits
-import os
-import matplotlib.pyplot as plt
 import numpy as np
-# from PIL import Image
+import os
 
+input = 'AIA'
+output = 'HMI'
+w = h = 1024  # desired width and height of png
 m_max = 1500  # maximum value for magnetograms
 m_min = -1500  # minimum value for magnetograms
 a_min = 0
 a_max = 150
 
 
-def save_to_png(filename, min, max):
-    hdul = fits.open("../data/ar1/" + filename, ext=0)
+def resize_and_save_to_png(name, fits_path, png_path, min, max, w, h):
+    print(name)
+    hdul = fits.open(fits_path + name + ".fits", ext=0)
     hdul.verify("fix")
     image_data = hdul[1].data
     # clip data between (min, max):
     image_data = np.clip(image_data, min, max)
     # translate data so it's between (0, max-min):
     image_data -= min
-    # normalise data so it's between (0, 1):
-    image_data = image_data/(max - min)
+    # normalise data so it's between (0, 255), and convert to uint8:
+    image_data = (image_data*255/(max - min)).astype(np.uint8)
     # set all nan values to 0
-    image_data = np.nan_to_num(image_data)
-    plt.imsave(
-               fname="../png_data/ar1/" + filename[:-5] + ".png",
-               arr=image_data,
-               cmap='gray',
-               origin='lower'
-               )
-    # image = Image.fromarray(image_data)
-    # image = image.convert("L")
-    # breakpoint()
-    # image.save("../png_data/ar1/" + filename[:-5] + ".png")
+    # image_data = np.nan_to_num(image_data)
+    image = Image.fromarray(image_data, mode="L")
+    image = image.resize((w, h), Image.LANCZOS)
+    image.save(png_path + name + ".png")
 
 
-for filename in os.listdir("../data/ar1/"):
-    filename_info = filename.split(".")
-    if filename_info[4] == "image_lev1":
-        save_to_png(filename, a_min, a_max)
+def main(data, min, max, w, h):
+    fits_path = "FITS_DATA/" + data + '/'
+    for filename in os.listdir(fits_path):
+        file_info = filename.split('.')
+        date = file_info[2].replace('-', '')
+        month = date[4:6]
+        if month == '09' or month == '10':
+            png_path = "DATA/TEST/" + data + '/'
+        else:
+            png_path = "DATA/TRAIN/" + data + '/'
+        os.makedirs(png_path) if not os.path.exists(png_path) else None
+        resize_and_save_to_png(name=filename[:-5],
+                               fits_path=fits_path,
+                               png_path=png_path,
+                               min=min,
+                               max=max,
+                               w=w,
+                               h=h
+                               )
 
-    elif filename_info[4] == "magnetogram":
-        save_to_png(filename, m_min, m_max)
+
+main(data=input,
+     min=a_min,
+     max=a_max,
+     w=w,
+     h=h
+     )
+main(data=output,
+     min=m_min,
+     max=m_max,
+     w=w,
+     h=h
+     )
