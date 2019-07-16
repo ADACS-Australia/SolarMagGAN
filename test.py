@@ -28,19 +28,19 @@ def listdir_nohidden(path):
 
 
 SLEEP_TIME = 1000
-DISPLAY_ITER = 2
-MAX_ITER = 6
+DISPLAY_ITER =2500
+MAX_ITER = 5000
 
-MODE = 'TEST_INPUT_to_TEST_OUTPUT'
-TRIAL_NAME = 'TEST3'
+MODE = 'AIA_to_HMI'
+TRIAL_NAME = 'Small_scale_test_1'
 
-INPUT = 'TEST_INPUT'  # input used while training
+INPUT = 'AIA'  # input used while training
 # testing input which has a corresponding output (near side AIA)
-INPUT1 = 'TEST_INPUT1'
-# testing input which does not have a corresponding (far side EUV)
+INPUT1 = 'AIA'
+# testing input which does not have a corresponding (far side EUVI)
 INPUT2 = 'TEST_INPUT2'
 # corresponding output for INPUT1 (near side HMI)
-OUTPUT = 'TEST_OUTPUT'
+OUTPUT = 'HMI'
 
 ISIZE = 1024  # input size
 NC_IN = 1  # number of channels in the output
@@ -79,6 +79,15 @@ os.makedirs(RESULT_PATH2) if not os.path.exists(RESULT_PATH2) else None
 FIGURE_PATH_MAIN = './FIGURES/' + TRIAL_NAME + '/'
 os.makedirs(FIGURE_PATH_MAIN) if not os.path.exists(FIGURE_PATH_MAIN) else None
 
+def GET_DATE(FILE):  # gets the date of a given file
+    if FILE[0] == '.':
+        FILE = FILE[1:]
+    INFO = FILE.split('.')
+    DATE = INFO[2].replace('-', '').replace('_', '').replace('T', '')[:10]
+    return int(DATE)
+
+def GET_DATE_OUTPUT(FILE):  # gets dates of output png's
+    return int(FILE[-14:-4])
 
 # This is used for finding the TUMF value
 def SCALE(DATA, RANGE_IN, RANGE_OUT):
@@ -183,8 +192,7 @@ while ITER <= MAX_ITER:
         IMG = np.float32(imread(IMAGE_LIST1[I]) / 255.0 * 2 - 1)
         # desired image (HMI nearside)
         REAL = np.float32(imread(IMAGE_LIST3[I]))
-        INFO = IMAGE_LIST1[I].split('.')
-        DATE = INFO[2].replace('-', '').replace('_', '').replace('T', '')[:10]
+        DATE = str(GET_DATE(IMAGE_LIST1[I]))
         # reshapes IMG tensor to (BATCH_SIZE, ISIZE, ISIZE, NC_IN)
         IMG.shape = (BATCH_SIZE, ISIZE, ISIZE, NC_IN)
         # output image (generated HMI)
@@ -202,8 +210,7 @@ while ITER <= MAX_ITER:
 
     for J in range(len(IMAGE_LIST2)):
         IMG = np.float32(imread(IMAGE_LIST2[J]) / 255.0 * 2 - 1)
-        INFO = IMAGE_LIST2[I].split('.')
-        DATE = INFO[2].replace('-', '').replace('_', '').replace('T', '')[:10]
+        DATE = str(GET_DATE(IMAGE_LIST2[J]))
         IMG.shape = (BATCH_SIZE, ISIZE, ISIZE, NC_IN)
         FAKE = NET_G_GEN(IMG)
         FAKE = ((FAKE[0] + 1) / 2.0 * 255.).clip(0, 255).astype('uint8')
@@ -212,25 +219,32 @@ while ITER <= MAX_ITER:
         imsave(SAVE_NAME, FAKE)
 
     def MAKE_FIGURE():
-        INPUT1_IMAGE_LIST = listdir_nohidden('./DATA/TEST/'+INPUT1 + '/')
+        INPUT1_IMAGE_LIST = listdir_nohidden('./DATA/TEST/' + INPUT1 + '/')
+        OUTPUT_IMAGE_LIST = listdir_nohidden('./DATA/TEST/' + OUTPUT + '/')
+        SAVE_PATH1_LIST = listdir_nohidden(SAVE_PATH1 + '/')
+        
+        # sort based on date:
+        INPUT1_IMAGE_LIST = sorted(INPUT1_IMAGE_LIST, key=GET_DATE)
+        OUTPUT_IMAGE_LIST = sorted(OUTPUT_IMAGE_LIST, key=GET_DATE)
+        SAVE_PATH1_LIST = sorted(SAVE_PATH1_LIST, key=GET_DATE_OUTPUT)
+        
+
         I1 = np.array(imread(INPUT1_IMAGE_LIST[0]))
         I2 = np.array(imread(INPUT1_IMAGE_LIST[1]))
         I3 = np.array(imread(INPUT1_IMAGE_LIST[2]))
         I4 = np.array(imread(INPUT1_IMAGE_LIST[3]))
-
-        OUTPUT_IMAGE_LIST = listdir_nohidden('./DATA/TEST/'+OUTPUT + '/')
 
         T1 = np.array(imread(OUTPUT_IMAGE_LIST[0]))
         T2 = np.array(imread(OUTPUT_IMAGE_LIST[1]))
         T3 = np.array(imread(OUTPUT_IMAGE_LIST[2]))
         T4 = np.array(imread(OUTPUT_IMAGE_LIST[3]))
 
-        O1 = np.array(imread(SAVE_PATH1 + '/' + OP1 + '_0.png'))
-        O2 = np.array(imread(SAVE_PATH1 + '/' + OP1 + '_1.png'))
-        O3 = np.array(imread(SAVE_PATH1 + '/' + OP1 + '_2.png'))
-        O4 = np.array(imread(SAVE_PATH1 + '/' + OP1 + '_3.png'))
+        O1 = np.array(imread(SAVE_PATH1_LIST[0]))
+        O2 = np.array(imread(SAVE_PATH1_LIST[1]))
+        O3 = np.array(imread(SAVE_PATH1_LIST[2]))
+        O4 = np.array(imread(SAVE_PATH1_LIST[3]))
 
-        fig2 = plt.figure()
+        fig2 = plt.figure(dpi=1200)
 
         ax211 = fig2.add_subplot(3, 4, 1)
         ax211.imshow(I1, cmap='gray')
@@ -290,59 +304,6 @@ while ITER <= MAX_ITER:
         ax3.plot(UTMF_REAL, UTMF_FAKE, 'ro')
         fig3.savefig(FIGURE_PATH + '_FIGURE3.png')
         plt.close(fig3)
-
-        INPUT2_IMAGE_LIST = listdir_nohidden('./DATA/TEST/'+INPUT2 + '/')
-        INPUT_TRAIN_IMAGE_LIST = listdir_nohidden('./DATA/TRAIN/'+INPUT + '/')
-
-        U1 = np.array(imread(INPUT2_IMAGE_LIST[0]))
-        U2 = np.array(imread(INPUT2_IMAGE_LIST[1]))
-        U3 = np.array(imread(INPUT_TRAIN_IMAGE_LIST[0]))
-        U4 = np.array(imread(INPUT_TRAIN_IMAGE_LIST[1]))
-
-        OUTPUT_TRAIN_IMAGE_LIST = listdir_nohidden('./DATA/TRAIN/' +
-                                                   OUTPUT + '/')
-
-        D1 = np.array(imread(SAVE_PATH2 + '/' + OP2 + '_0.png'))
-        D2 = np.array(imread(SAVE_PATH2 + '/' + OP2 + '_1.png'))
-        D3 = np.array(imread(OUTPUT_TRAIN_IMAGE_LIST[0]))
-        D4 = np.array(imread(OUTPUT_TRAIN_IMAGE_LIST[1]))
-
-        fig4 = plt.figure()
-
-        ax411 = fig4.add_subplot(2, 4, 1)
-        ax411.imshow(U1, cmap='gray')
-        ax411.axis('off')
-
-        ax412 = fig4.add_subplot(2, 4, 2)
-        ax412.imshow(U2, cmap='gray')
-        ax412.axis('off')
-
-        ax413 = fig4.add_subplot(2, 4, 3)
-        ax413.imshow(U3, cmap='gray')
-        ax413.axis('off')
-
-        ax414 = fig4.add_subplot(2, 4, 4)
-        ax414.imshow(U4, cmap='gray')
-        ax414.axis('off')
-
-        ax421 = fig4.add_subplot(2, 4, 5)
-        ax421.imshow(D1, cmap='gray')
-        ax421.axis('off')
-
-        ax422 = fig4.add_subplot(2, 4, 6)
-        ax422.imshow(D2, cmap='gray')
-        ax422.axis('off')
-
-        ax423 = fig4.add_subplot(2, 4, 7)
-        ax423.imshow(D3, cmap='gray')
-        ax423.axis('off')
-
-        ax424 = fig4.add_subplot(2, 4, 8)
-        ax424.imshow(D4, cmap='gray')
-        ax424.axis('off')
-
-        fig4.savefig(FIGURE_PATH + '_FIGURE4.png')
-        plt.close(fig4)
 
     MAKE_FIGURE()
 
