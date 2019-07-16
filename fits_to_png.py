@@ -12,7 +12,7 @@ a_min = -10
 a_max = 150
 
 
-def resize_and_save_to_png(name, fits_path, png_path, min, max, w, h):
+def save_to_png(name, fits_path, png_path, min, max, w, h, rotate=False):
     print(name)
     hdul = fits.open(fits_path + name + ".fits", memmap=True, ext=0)
     hdul.verify("fix")
@@ -29,10 +29,13 @@ def resize_and_save_to_png(name, fits_path, png_path, min, max, w, h):
     image = image.resize((w, h), Image.LANCZOS)
     # flip image to match original orientation.
     image = image.transpose(Image.FLIP_TOP_BOTTOM)
+    # rotate images to match
+    if rotate:
+        image = image.transpose(Image.ROTATE_180)
     image.save(png_path + name + ".png")
 
 
-def main(data, min, max, w, h):
+def main(data, min, max, w, h, rotate=False):
     fits_path = "FITS_DATA/" + data + '/'
     for filename in os.listdir(fits_path):
         file_info = filename.split('.')
@@ -43,14 +46,15 @@ def main(data, min, max, w, h):
         else:
             png_path = "DATA/TRAIN/" + data + '/'
         os.makedirs(png_path) if not os.path.exists(png_path) else None
-        resize_and_save_to_png(name=filename[:-5],
-                               fits_path=fits_path,
-                               png_path=png_path,
-                               min=min,
-                               max=max,
-                               w=w,
-                               h=h
-                               )
+        save_to_png(name=filename[:-5],
+                    fits_path=fits_path,
+                    png_path=png_path,
+                    min=min,
+                    max=max,
+                    w=w,
+                    h=h,
+                    rotate=rotate
+                    )
 
 
 main(data=input,
@@ -63,5 +67,6 @@ main(data=output,
      min=m_min,
      max=m_max,
      w=w,
-     h=h
+     h=h,
+     rotate=True
      )
