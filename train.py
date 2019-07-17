@@ -34,7 +34,7 @@ tf.Session(config=config)
 
 # Hyper parameters
 NITERS = 5000  # total number of iterations
-DISPLAY_ITERS = 50  # number of iterations before display and model generation
+DISPLAY_ITERS = 100  # number of iterations before display and model generation
 
 # the input data:
 # (originally AIA or Atmospheric Imaging Assembly)

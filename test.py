@@ -28,8 +28,8 @@ def listdir_nohidden(path):
 
 
 SLEEP_TIME = 1000
-DISPLAY_ITER =2500
-MAX_ITER = 5000
+DISPLAY_ITER =1000
+MAX_ITER = 4000
 
 MODE = 'AIA_to_HMI'
 TRIAL_NAME = 'Small_scale_test_1'
