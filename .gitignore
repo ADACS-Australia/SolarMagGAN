@@ -8,3 +8,5 @@ data_query.pkl
 
 *.err
 *.out
+
+venv/
