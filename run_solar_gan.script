@@ -5,7 +5,7 @@
 # Request CPU resource for a serial job
 #SBATCH --ntasks=1
 # SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=8
 
 # Request for GPU,
 #
@@ -20,7 +20,7 @@
 #SBATCH --mem-per-cpu=8G
 
 # Set your minimum acceptable walltime, format: day-hours:minutes:seconds
-#SBATCH --time=0-16:00:00
+#SBATCH --time=0-00:01:00
 
 
 # To receive an email when job completes or fails
@@ -30,10 +30,10 @@
 
 
 # Set the file for output (stdout)
-#SBATCH --output=SealTraining-%j.out
+#SBATCH --output=~/Sun/run_solar_gan.out
 
 # Set the file for error log (stderr)
-#SBATCH --error=SealTraining-%j.err
+#SBATCH --error=~/Sun/run_solar_gan.err
 
 
 # Use reserved node to run job when a node reservation is made for you already
@@ -41,4 +41,6 @@
 
 
 # Command to run a gpu job
+conda activate winter_project
+cd ~/Sun/SolarMagGAN
 python train.py
