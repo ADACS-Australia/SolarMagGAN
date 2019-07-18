@@ -12,7 +12,7 @@ email = 'csmi0005@student.monash.edu'
 start = '2011/01/01 00:00:00'
 end = '2017/01/01 00:00:00'
 
-cadence = 30*u.day  # 30 days
+cadence = 10*u.day  # 30 days
 wavelength = 304*u.AA  # 304 Angstroms
 
 res_aia = Fido.search(a.Time(start, end),

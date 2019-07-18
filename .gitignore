@@ -6,3 +6,5 @@ RESUlTS/
 FITS_DATA
 data_query.pkl
 
+*.err
+*.out

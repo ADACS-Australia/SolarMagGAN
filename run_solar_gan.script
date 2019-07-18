@@ -30,10 +30,10 @@
 
 
 # Set the file for output (stdout)
-#SBATCH --output=~/Sun/run_solar_gan.out
+#SBATCH --output=/mnt/lustre/projects/Mona0028/adonea/SolarMagGAN/train_solar_gan.out
 
 # Set the file for error log (stderr)
-#SBATCH --error=~/Sun/run_solar_gan.err
+#SBATCH --error=/mnt/lustre/projects/Mona0028/adonea/SolarMagGAN/train_solar_gan.err
 
 
 # Use reserved node to run job when a node reservation is made for you already
@@ -41,6 +41,7 @@
 
 
 # Command to run a gpu job
+source ~/.bashrc
 conda activate winter_project
-cd ~/Sun/SolarMagGAN
+cd /mnt/lustre/projects/Mona0028/adonea/SolarMagGAN
 python train.py
