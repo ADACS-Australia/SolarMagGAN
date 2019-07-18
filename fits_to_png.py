@@ -8,15 +8,19 @@ output = 'HMI'
 w = h = 1024  # desired width and height of png
 m_max = 1500  # maximum value for magnetograms
 m_min = -1500  # minimum value for magnetograms
-a_min = -10
-a_max = 150
+a_min = 0
+a_max = 150/4
 
 
-def save_to_png(name, fits_path, png_path, min, max, w, h, rotate=False):
+def save_to_png(name, fits_path, png_path, min, max, w, h,
+                normalise=False, rotate=False):
     print(name)
     hdul = fits.open(fits_path + name + ".fits", memmap=True, ext=0)
     hdul.verify("fix")
     image_data = hdul[1].data
+    if normalise:
+        int_time = hdul[1].header['DATAMEDN']
+        image_data = image_data/int_time
     # clip data between (min, max):
     image_data = np.clip(image_data, min, max)
     # translate data so it's between (0, max-min):
@@ -35,7 +39,7 @@ def save_to_png(name, fits_path, png_path, min, max, w, h, rotate=False):
     image.save(png_path + name + ".png")
 
 
-def main(data, min, max, w, h, rotate=False):
+def main(data, min, max, w, h, normalise=False, rotate=False):
     fits_path = "FITS_DATA/" + data + '/'
     for filename in os.listdir(fits_path):
         file_info = filename.split('.')
@@ -53,6 +57,7 @@ def main(data, min, max, w, h, rotate=False):
                     max=max,
                     w=w,
                     h=h,
+                    normalise=normalise,
                     rotate=rotate
                     )
 
@@ -61,7 +66,8 @@ main(data=input,
      min=a_min,
      max=a_max,
      w=w,
-     h=h
+     h=h,
+     normalise=True
      )
 main(data=output,
      min=m_min,
