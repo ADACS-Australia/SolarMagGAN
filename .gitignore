@@ -8,5 +8,6 @@ data_query.pkl
 
 *.err
 *.out
+*.script
 
 venv/
