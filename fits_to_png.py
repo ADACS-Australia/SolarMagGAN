@@ -39,22 +39,40 @@ def save_to_png(name, fits_path, png_path, min, max, w, h,
     if crop:
         if "R_SUN" in hdul[1].header:
             radius = hdul[1].header["R_SUN"]
-            radius = int(radius) + 1  # convert to int
+            # coordinates of center of sun
+            x = 2096 - 40
+            y = 2096 - 50
+            # cropping coords:
+            left = x - radius
+            right = x + radius
+            top = y - radius
+            bottom = y + radius
+
         else:
-            diameter = 0
-            middle_row = int(4096/2)  # middle row of image data
-            col = 0  # collumn
-            element = image_data[middle_row, col]
-            while np.isnan(element):  # itterate through until we find the sun
+            image_values = np.nan_to_num(image_data)
+            row = 0  # row
+            row_sum = np.sum(image_values[row])
+            while row_sum == 0:  # itterate through until we find the sun
+                row += 1
+                row_sum = np.sum(image_values[row])
+            top = row
+            while row_sum != 0:  # itterate through the sun
+                row += 1
+                row_sum = np.sum(image_values[row])
+            bottom = row
+
+            col = 0  # column
+            col_sum = np.sum(image_values[:, col])
+            while col_sum == 0:  # itterate through until we find the sun
                 col += 1
-                element = image_data[middle_row, col]
-            while not np.isnan(element):  # itterate through the sun
-                diameter += 1
+                col_sum = np.sum(image_values[:, col])
+            left = col
+            while col_sum != 0:  # itterate through the sun
                 col += 1
-                element = image_data[middle_row, col]
-            radius = int(diameter/2) + 1  # convert to int
-        image = image.crop((2048-radius, 2048-radius,
-                            2048+radius, 2048+radius))
+                col_sum = np.sum(image_values[:, col])
+            right = col
+
+        image = image.crop((left, top, right, bottom))
 
     image = image.resize((w, h), Image.LANCZOS)
     # flip image to match original orientation.
@@ -97,6 +115,7 @@ def main(data, min, max, w, h, normalise=False, rotate=False,
 
 
 if __name__ == "__main__":
+    # aia:
     # main(data=input,
     #     min=a_min,
     #     max=a_max,
@@ -104,6 +123,7 @@ if __name__ == "__main__":
     #     h=h,
     #     normalise=True
     #     )
+    # hmi:
     # main(data=output,
     #     min=m_min,
     #     max=m_max,
@@ -111,6 +131,7 @@ if __name__ == "__main__":
     #     h=h,
     #     rotate=True,
     #     )
+    # abs hmi:
     # main(data=output,
     #      min=m_min,
     #      max=2000,
@@ -119,6 +140,7 @@ if __name__ == "__main__":
     #      rotate=True,
     #      abs=True
     #      )
+    # cropped AIA
     main(data=input,
          min=a_min,
          max=a_max,
@@ -127,6 +149,7 @@ if __name__ == "__main__":
          normalise=True,
          crop=True
          )
+    # cropped HMI
     main(data=output,
          min=m_min,
          max=m_max,
