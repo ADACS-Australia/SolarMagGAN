@@ -13,7 +13,8 @@ a_max = 150/4
 
 
 def save_to_png(name, fits_path, png_path, min, max, w, h,
-                normalise=False, rotate=False, abs=False):
+                normalise=False, rotate=False, abs=False,
+                crop=False):
     print(name)
     hdul = fits.open(fits_path + name + ".fits", memmap=True, ext=0)
     hdul.verify("fix")
@@ -24,6 +25,7 @@ def save_to_png(name, fits_path, png_path, min, max, w, h,
     if normalise:
         int_time = hdul[1].header['DATAMEDN']
         image_data = image_data/int_time
+
     # clip data between (min, max):
     image_data = np.clip(image_data, min, max)
     # translate data so it's between (0, max-min):
@@ -33,19 +35,44 @@ def save_to_png(name, fits_path, png_path, min, max, w, h,
 
     # format data, and convert to image
     image = Image.fromarray(np.uint8(image_data * 255), 'L')
+    # crop to diameter of sun
+    if crop:
+        if "R_SUN" in hdul[1].header:
+            radius = hdul[1].header["R_SUN"]
+            radius = int(radius) + 1  # convert to int
+        else:
+            diameter = 0
+            middle_row = int(4096/2)  # middle row of image data
+            col = 0  # collumn
+            element = image_data[middle_row, col]
+            while np.isnan(element):  # itterate through until we find the sun
+                col += 1
+                element = image_data[middle_row, col]
+            while not np.isnan(element):  # itterate through the sun
+                diameter += 1
+                col += 1
+                element = image_data[middle_row, col]
+            radius = int(diameter/2) + 1  # convert to int
+        image = image.crop((2048-radius, 2048-radius,
+                            2048+radius, 2048+radius))
+
     image = image.resize((w, h), Image.LANCZOS)
     # flip image to match original orientation.
     image = image.transpose(Image.FLIP_TOP_BOTTOM)
     # rotate images to match
     if rotate:
         image = image.transpose(Image.ROTATE_180)
+
     image.save(png_path + name + ".png")
 
 
-def main(data, min, max, w, h, normalise=False, rotate=False, abs=False):
+def main(data, min, max, w, h, normalise=False, rotate=False,
+         abs=False, crop=False):
     fits_path = "FITS_DATA/" + data + '/'
     if abs:
         data = 'ABS_' + data
+    if crop:
+        data = 'CROPPED_' + data
     for filename in os.listdir(fits_path):
         file_info = filename.split('.')
         date = file_info[2].replace('-', '')
@@ -64,29 +91,47 @@ def main(data, min, max, w, h, normalise=False, rotate=False, abs=False):
                     h=h,
                     normalise=normalise,
                     rotate=rotate,
-                    abs=abs
+                    abs=abs,
+                    crop=crop
                     )
 
 
-#main(data=input,
-#     min=a_min,
-#     max=a_max,
-#     w=w,
-#     h=h,
-#     normalise=True
-#     )
-#main(data=output,
-#     min=m_min,
-#     max=m_max,
-#     w=w,
-#     h=h,
-#     rotate=True,
-#     )
-main(data=output,
-     min=m_min,
-     max=2000,
-     w=w,
-     h=h,
-     rotate=True,
-     abs=True
-     )
+if __name__ == "__main__":
+    # main(data=input,
+    #     min=a_min,
+    #     max=a_max,
+    #     w=w,
+    #     h=h,
+    #     normalise=True
+    #     )
+    # main(data=output,
+    #     min=m_min,
+    #     max=m_max,
+    #     w=w,
+    #     h=h,
+    #     rotate=True,
+    #     )
+    # main(data=output,
+    #      min=m_min,
+    #      max=2000,
+    #      w=w,
+    #      h=h,
+    #      rotate=True,
+    #      abs=True
+    #      )
+    main(data=input,
+         min=a_min,
+         max=a_max,
+         w=w,
+         h=h,
+         normalise=True,
+         crop=True
+         )
+    main(data=output,
+         min=m_min,
+         max=m_max,
+         w=w,
+         h=h,
+         rotate=True,
+         crop=True
+         )
