@@ -13,11 +13,14 @@ a_max = 150/4
 
 
 def save_to_png(name, fits_path, png_path, min, max, w, h,
-                normalise=False, rotate=False):
+                normalise=False, rotate=False, abs=False):
     print(name)
     hdul = fits.open(fits_path + name + ".fits", memmap=True, ext=0)
     hdul.verify("fix")
     image_data = hdul[1].data
+    if abs:
+        image_data = np.abs(image_data)
+        min = np.max([0, min])
     if normalise:
         int_time = hdul[1].header['DATAMEDN']
         image_data = image_data/int_time
@@ -39,8 +42,10 @@ def save_to_png(name, fits_path, png_path, min, max, w, h,
     image.save(png_path + name + ".png")
 
 
-def main(data, min, max, w, h, normalise=False, rotate=False):
+def main(data, min, max, w, h, normalise=False, rotate=False, abs=False):
     fits_path = "FITS_DATA/" + data + '/'
+    if abs:
+        data = 'ABS_' + data
     for filename in os.listdir(fits_path):
         file_info = filename.split('.')
         date = file_info[2].replace('-', '')
@@ -58,21 +63,30 @@ def main(data, min, max, w, h, normalise=False, rotate=False):
                     w=w,
                     h=h,
                     normalise=normalise,
-                    rotate=rotate
+                    rotate=rotate,
+                    abs=abs
                     )
 
 
-main(data=input,
-     min=a_min,
-     max=a_max,
-     w=w,
-     h=h,
-     normalise=True
-     )
+#main(data=input,
+#     min=a_min,
+#     max=a_max,
+#     w=w,
+#     h=h,
+#     normalise=True
+#     )
+#main(data=output,
+#     min=m_min,
+#     max=m_max,
+#     w=w,
+#     h=h,
+#     rotate=True,
+#     )
 main(data=output,
      min=m_min,
-     max=m_max,
+     max=2000,
      w=w,
      h=h,
-     rotate=True
+     rotate=True,
+     abs=True
      )
