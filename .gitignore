@@ -11,3 +11,4 @@ data_query.pkl
 *.script
 
 venv/
+gpu_venv/
