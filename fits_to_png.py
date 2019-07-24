@@ -38,7 +38,7 @@ def save_to_png(name, fits_path, png_path, min, max, w, h,
     # crop to diameter of sun
     if crop:
         if "R_SUN" in hdul[1].header:
-            radius = hdul[1].header["R_SUN"]
+            radius = hdul[1].header["R_SUN"] + 10
             # coordinates of center of sun
             x = 2096 - 40
             y = 2096 - 50
@@ -150,11 +150,11 @@ if __name__ == "__main__":
          crop=True
          )
     # cropped HMI
-    main(data=output,
-         min=m_min,
-         max=m_max,
-         w=w,
-         h=h,
-         rotate=True,
-         crop=True
-         )
+    # main(data=output,
+    #      min=m_min,
+    #      max=m_max,
+    #      w=w,
+    #      h=h,
+    #      rotate=True,
+    #      crop=True
+    #      )
