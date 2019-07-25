@@ -6,8 +6,8 @@ import os
 input = 'AIA'
 output = 'HMI'
 w = h = 1024  # desired width and height of png
-m_max = 1500  # maximum value for magnetograms
-m_min = -1500  # minimum value for magnetograms
+m_max = 100  # maximum value for magnetograms
+m_min = -100  # minimum value for magnetograms
 a_min = 0
 a_max = 150/4
 
