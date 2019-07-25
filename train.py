@@ -244,7 +244,7 @@ NET_G = UNET_G(ISIZE, NC_IN, NC_OUT)
 # tensor placeholders?
 REAL_A = NET_G.input  # generator input (AIA)
 FAKE_B = NET_G.output  # generator output (fake HMI)
-REAL_B = NET_D.inputs[1]  # descriminator input (real HMI)
+REAL_B = NET_D.inputs[1]  # descriminator input (real HMI)
 
 # output of the discriminator for AIA and real HMI
 OUTPUT_D_REAL = NET_D([REAL_A, REAL_B])
