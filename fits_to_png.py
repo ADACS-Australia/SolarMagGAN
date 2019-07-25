@@ -2,6 +2,10 @@ from PIL import Image
 from astropy.io import fits
 import numpy as np
 import os
+import sunpy
+import sunpy.map
+import astropy.units as u
+from astropy.coordinates import SkyCoord
 
 input = 'AIA'
 output = 'HMI'
@@ -14,11 +18,22 @@ a_max = 150/4
 
 def save_to_png(name, fits_path, png_path, min, max, w, h,
                 normalise=False, rotate=False, abs=False,
-                crop=False):
+                crop=False, top_right=None, bottom_left=None):
     print(name)
-    hdul = fits.open(fits_path + name + ".fits", memmap=True, ext=0)
+    filename = fits_path + name + ".fits"
+    hdul = fits.open(filename, memmap=True, ext=0)
     hdul.verify("fix")
-    image_data = hdul[1].data
+    if not crop:
+        image_data = hdul[1].data
+    else:
+        # Cropping to desired range
+        map = sunpy.map.Map(filename)
+        if rotate:
+            map = map.rotate(angle=180 * u.deg)
+
+        # Cropping
+        image_data = map.submap(bottom_left, top_right).data
+
     if abs:
         image_data = np.abs(image_data)
         min = np.max([0, min])
@@ -36,61 +51,24 @@ def save_to_png(name, fits_path, png_path, min, max, w, h,
     # format data, and convert to image
     image = Image.fromarray(np.uint8(image_data * 255), 'L')
     # crop to diameter of sun
-    if crop:
-        if "R_SUN" in hdul[1].header:
-            radius = hdul[1].header["R_SUN"] + 10
-            # coordinates of center of sun
-            x = 2096 - 40
-            y = 2096 - 50
-            # cropping coords:
-            left = x - radius
-            right = x + radius
-            top = y - radius
-            bottom = y + radius
-
-        else:
-            image_values = np.nan_to_num(image_data)
-            row = 0  # row
-            row_sum = np.sum(image_values[row])
-            while row_sum == 0:  # itterate through until we find the sun
-                row += 1
-                row_sum = np.sum(image_values[row])
-            top = row
-            while row_sum != 0:  # itterate through the sun
-                row += 1
-                row_sum = np.sum(image_values[row])
-            bottom = row
-
-            col = 0  # column
-            col_sum = np.sum(image_values[:, col])
-            while col_sum == 0:  # itterate through until we find the sun
-                col += 1
-                col_sum = np.sum(image_values[:, col])
-            left = col
-            while col_sum != 0:  # itterate through the sun
-                col += 1
-                col_sum = np.sum(image_values[:, col])
-            right = col
-
-        image = image.crop((left, top, right, bottom))
-
     image = image.resize((w, h), Image.LANCZOS)
     # flip image to match original orientation.
     image = image.transpose(Image.FLIP_TOP_BOTTOM)
     # rotate images to match
-    if rotate:
+    if rotate and not crop:
         image = image.transpose(Image.ROTATE_180)
 
     image.save(png_path + name + ".png")
 
 
 def main(data, min, max, w, h, normalise=False, rotate=False,
-         abs=False, crop=False):
+         abs=False, crop=False, top_right=None, bottom_left=None):
     fits_path = "FITS_DATA/" + data + '/'
     if abs:
         data = 'ABS_' + data
     if crop:
         data = 'CROPPED_' + data
+    data = "test" + data
     for filename in os.listdir(fits_path):
         file_info = filename.split('.')
         date = file_info[2].replace('-', '')
@@ -110,51 +88,40 @@ def main(data, min, max, w, h, normalise=False, rotate=False,
                     normalise=normalise,
                     rotate=rotate,
                     abs=abs,
-                    crop=crop
+                    crop=crop,
+                    top_right=top_right,
+                    bottom_left=bottom_left
                     )
 
 
 if __name__ == "__main__":
-    # aia:
-    # main(data=input,
-    #     min=a_min,
-    #     max=a_max,
-    #     w=w,
-    #     h=h,
-    #     normalise=True
-    #     )
-    # hmi:
-    # main(data=output,
-    #     min=m_min,
-    #     max=m_max,
-    #     w=w,
-    #     h=h,
-    #     rotate=True,
-    #     )
-    # abs hmi:
-    # main(data=output,
-    #      min=m_min,
-    #      max=2000,
-    #      w=w,
-    #      h=h,
-    #      rotate=True,
-    #      abs=True
-    #      )
-    # cropped AIA
+    # -1000 to 1000 arcsec results in a full disk image.
+    # Slightly lower values will be closerto the actual limb of the Sun
+    filename = "./FITS_DATA/HMI/" + os.listdir("FITS_DATA/HMI/")[0]
+    map_ref = sunpy.map.Map(filename)
+    top_right = SkyCoord(1000 * u.arcsec, 1000 * u.arcsec,
+                         frame=map_ref.coordinate_frame)
+    bottom_left = SkyCoord(-1000 * u.arcsec, -1000 * u.arcsec,
+                           frame=map_ref.coordinate_frame)
+    # AIA:
     main(data=input,
          min=a_min,
          max=a_max,
          w=w,
          h=h,
          normalise=True,
-         crop=True
+         crop=True,
+         top_right=top_right,
+         bottom_left=bottom_left
          )
-    # cropped HMI
-    # main(data=output,
-    #      min=m_min,
-    #      max=m_max,
-    #      w=w,
-    #      h=h,
-    #      rotate=True,
-    #      crop=True
-    #      )
+    # HMI:
+    main(data=output,
+         min=m_min,
+         max=m_max,
+         w=w,
+         h=h,
+         rotate=True,
+         crop=True,
+         top_right=top_right,
+         bottom_left=bottom_left
+         )
