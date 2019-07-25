@@ -29,10 +29,9 @@ def listdir_nohidden(path):
 
 SLEEP_TIME = 1000
 DISPLAY_ITER =1000
-MAX_ITER = 4000
+MAX_ITER = 5000
 
-MODE = 'AIA_to_HMI'
-TRIAL_NAME = 'Small_scale_test_1'
+TRIAL_NAME = 'trial_1'
 
 INPUT = 'AIA'  # input used while training
 # testing input which has a corresponding output (near side AIA)
@@ -41,6 +40,9 @@ INPUT1 = 'AIA'
 INPUT2 = 'TEST_INPUT2'
 # corresponding output for INPUT1 (near side HMI)
 OUTPUT = 'HMI'
+
+MODE = INPUT + '_to_' + OUTPUT
+
 
 ISIZE = 1024  # input size
 NC_IN = 1  # number of channels in the output
@@ -168,6 +170,7 @@ while ITER <= MAX_ITER:
             print('Starting Iter ' + str(ITER) + ' ...')
             EX = 1
         else:
+            print('no model found at: ' + MODEL_NAME)
             print('Waiting Iter ' + str(ITER) + ' ...')
             time.sleep(SLEEP_TIME)
 
