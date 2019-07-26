@@ -10,38 +10,52 @@ email = 'csmi0005@student.monash.edu'
 
 # query duration:
 start = '2015/01/01 00:00:00'
-end = '2017/01/01 00:00:00'
+end = '2015/01/01 00:00:00'
+
+AIA = True
+HMI = True
 
 cadence = 12*u.hour  # take images every 12 hours
 wavelength = 304*u.AA  # 304 Angstroms
 
-res_aia = Fido.search(a.Time(start, end),
-                      a.jsoc.Notify(email),
-                      a.jsoc.Series('aia.lev1_euv_12s'),
-                      a.jsoc.Segment('image'),
-                      a.jsoc.Wavelength(wavelength),
-                      a.Sample(cadence)
-                      )
+if AIA:
+    res_aia = Fido.search(a.Time(start, end),
+                          a.jsoc.Notify(email),
+                          a.jsoc.Series('aia.lev1_euv_12s'),
+                          a.jsoc.Segment('image'),
+                          a.jsoc.Wavelength(wavelength),
+                          a.Sample(cadence)
+                          )
 
-print(res_aia)
+    print(res_aia)
 
-# magnetogram results
-res_hmi = Fido.search(a.Time(start, end),
-                      a.jsoc.Notify(email),
-                      a.jsoc.Series('hmi.m_45s'),
-                      a.Sample(cadence)
-                      )
+    # save the the query details to file
+    with open('data_query_aia.pkl', 'wb') as f:
+        pickle.dump([start, end, res_aia], f)
 
-print(res_hmi)
+if HMI:
+    res_hmi = Fido.search(a.Time(start, end),
+                          a.jsoc.Notify(email),
+                          a.jsoc.Series('hmi.m_45s'),
+                          a.Sample(cadence)
+                          )
 
-# save the the query details to file
-with open('data_query.pkl', 'wb') as f:
-    pickle.dump([start, end, res_aia, res_hmi], f)
+    # save the the query details to file
+    with open('data_query_hmi.pkl', 'wb') as f:
+        pickle.dump([start, end, res_hmi], f)
+    print(res_hmi)
 
-# download data
-path1 = './FITS_DATA/AIA'
-path2 = './FITS_DATA/HMI'
-os.makedirs(path1) if not os.path.exists(path1) else None
-downloaded_files = Fido.fetch(res_aia, path='./FITS_DATA/AIA')
-os.makedirs(path2) if not os.path.exists(path2) else None
-downloaded_files = Fido.fetch(res_hmi, path='./FITS_DATA/HMI')
+
+if AIA:
+    print('AIA\nStart: ' + start + '\nEnd: ' + end)
+    print(res_aia)
+    path1 = './FITS_DATA/AIA'
+    os.makedirs(path1) if not os.path.exists(path1) else None
+    downloaded_files = Fido.fetch(res_aia, path='./FITS_DATA/AIA')
+
+if HMI:
+    print('HMI\nStart: ' + start + '\nEnd: ' + end)
+    print(res_hmi)
+    path2 = './FITS_DATA/HMI'
+    os.makedirs(path2) if not os.path.exists(path2) else None
+    downloaded_files = Fido.fetch(res_hmi, path='./FITS_DATA/HMI')

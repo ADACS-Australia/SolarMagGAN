@@ -4,8 +4,8 @@ MODELS/
 FIGURES/
 RESULTS/
 FITS_DATA
-data_query.pkl
 
+*.pkl
 *.err
 *.out
 *.script
