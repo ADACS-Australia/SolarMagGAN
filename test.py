@@ -3,10 +3,14 @@ import glob
 from imageio import imread, imsave
 import numpy as np
 from keras.models import load_model
+import matplotlib
 import matplotlib.pyplot as plt
 import keras.backend as K
 import time
 import tensorflow as tf
+# stop matplotlib from using display so that it still works on cluster
+matplotlib.use('agg')
+
 
 # initialise tensorflow
 config = tf.ConfigProto()
@@ -28,10 +32,10 @@ def listdir_nohidden(path):
 
 
 SLEEP_TIME = 1000
-DISPLAY_ITER =1000
-MAX_ITER = 5000
+DISPLAY_ITER = 20000
+MAX_ITER = 500000
 
-TRIAL_NAME = 'trial_1'
+TRIAL_NAME = 'trial_2'
 
 INPUT = 'AIA'  # input used while training
 # testing input which has a corresponding output (near side AIA)
@@ -81,6 +85,7 @@ os.makedirs(RESULT_PATH2) if not os.path.exists(RESULT_PATH2) else None
 FIGURE_PATH_MAIN = './FIGURES/' + TRIAL_NAME + '/'
 os.makedirs(FIGURE_PATH_MAIN) if not os.path.exists(FIGURE_PATH_MAIN) else None
 
+
 def GET_DATE(FILE):  # gets the date of a given file
     if FILE[0] == '.':
         FILE = FILE[1:]
@@ -88,8 +93,10 @@ def GET_DATE(FILE):  # gets the date of a given file
     DATE = INFO[2].replace('-', '').replace('_', '').replace('T', '')[:10]
     return int(DATE)
 
+
 def GET_DATE_OUTPUT(FILE):  # gets dates of output png's
     return int(FILE[-14:-4])
+
 
 # This is used for finding the TUMF value
 def SCALE(DATA, RANGE_IN, RANGE_OUT):
@@ -225,12 +232,11 @@ while ITER <= MAX_ITER:
         INPUT1_IMAGE_LIST = listdir_nohidden('./DATA/TEST/' + INPUT1 + '/')
         OUTPUT_IMAGE_LIST = listdir_nohidden('./DATA/TEST/' + OUTPUT + '/')
         SAVE_PATH1_LIST = listdir_nohidden(SAVE_PATH1 + '/')
-        
+
         # sort based on date:
         INPUT1_IMAGE_LIST = sorted(INPUT1_IMAGE_LIST, key=GET_DATE)
         OUTPUT_IMAGE_LIST = sorted(OUTPUT_IMAGE_LIST, key=GET_DATE)
         SAVE_PATH1_LIST = sorted(SAVE_PATH1_LIST, key=GET_DATE_OUTPUT)
-        
 
         I1 = np.array(imread(INPUT1_IMAGE_LIST[0]))
         I2 = np.array(imread(INPUT1_IMAGE_LIST[1]))

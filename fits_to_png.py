@@ -66,9 +66,6 @@ def main(data, min, max, w, h, normalise=False, rotate=False,
     fits_path = "FITS_DATA/" + data + '/'
     if abs:
         data = 'ABS_' + data
-    if crop:
-        data = 'CROPPED_' + data
-    data = "test" + data
     for filename in os.listdir(fits_path):
         file_info = filename.split('.')
         date = file_info[2].replace('-', '')
