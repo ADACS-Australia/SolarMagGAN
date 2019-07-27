@@ -13,8 +13,9 @@ start = '2015/01/01 00:00:00'
 end = '2015/01/01 00:00:00'
 
 AIA = True
+AIA_path = './FITS_DATA/AIA'
 HMI = True
-
+HMI_path = './FITS_DATA/HMI'
 cadence = 12*u.hour  # take images every 12 hours
 wavelength = 304*u.AA  # 304 Angstroms
 
@@ -49,13 +50,11 @@ if HMI:
 if AIA:
     print('AIA\nStart: ' + start + '\nEnd: ' + end)
     print(res_aia)
-    path1 = './FITS_DATA/AIA'
-    os.makedirs(path1) if not os.path.exists(path1) else None
-    downloaded_files = Fido.fetch(res_aia, path='./FITS_DATA/AIA')
+    os.makedirs(HMI_path) if not os.path.exists(AIA_path) else None
+    downloaded_files = Fido.fetch(res_aia, path=AIA_path)
 
 if HMI:
     print('HMI\nStart: ' + start + '\nEnd: ' + end)
     print(res_hmi)
-    path2 = './FITS_DATA/HMI'
-    os.makedirs(path2) if not os.path.exists(path2) else None
-    downloaded_files = Fido.fetch(res_hmi, path='./FITS_DATA/HMI')
+    os.makedirs(HMI_path) if not os.path.exists(HMI_path) else None
+    downloaded_files = Fido.fetch(res_hmi, path=HMI_path)
