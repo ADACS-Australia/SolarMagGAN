@@ -7,16 +7,16 @@
 4. run `test.py` to test the models on new data, and generate figures for the results. The output png files are saved in the `RESULTS` folder, while the generated figures are saved in the `FIGURES` folder.
 
 ### Environments
-To run `train.py` and `test.py`, with the correct packages, we made use of a conda environment.
+To run `train.py` and `test.py` with the correct packages we made use of a conda environment.
 
 To create a similar conda environment for using a gpu use the command:
 
 `conda create --name gpu_env python=3.6 tensorflow-gpu==1.12 keras-gpu imageio matplotlib`
 
 Alternatively, for a normal cpu, use the command:
+
 `conda create --name cpu_env python=3.6 tensorflow==1.12 Keras imageio matplotlib`
 
-also the link to the docs for Monarch is:
 ## Network architectures
 
 ### Generator architectures
