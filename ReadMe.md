@@ -1,4 +1,22 @@
+## Pipeline:
 
+1. run `get_data.py` to download AIA and HMI data in the .fits file format to the folder `FITS_DATA`. This also creates a pickle files with the data queries. **OR**
+1. run `get_pickle_data.py` if there already exists a pickle file with the data queries to download the AIA and HMI data in the .fits file format to the folder `FITS_DATA`.
+2. run `fits_to_png.py` to create normalised and centered AIA and HMI png files from the fits files, and put them into testing and training sets. This is done in the `DATA` folder.
+3. run `train.py` to train the GAN on the data, saving the models in the folder `MODELS`.
+4. run `test.py` to test the models on new data, and generate figures for the results. The output png files are saved in the `RESULTS` folder, while the generated figures are saved in the `FIGURES` folder.
+
+### Environments
+To run `train.py` and `test.py`, with the correct packages, we made use of a conda environment.
+
+To create a similar conda environment for using a gpu use the command:
+
+`conda create --name gpu_env python=3.6 tensorflow-gpu==1.12 keras-gpu imageio matplotlib`
+
+Alternatively, for a normal cpu, use the command:
+`conda create --name cpu_env python=3.6 tensorflow==1.12 Keras imageio matplotlib`
+
+also the link to the docs for Monarch is:
 ## Network architectures
 
 ### Generator architectures
