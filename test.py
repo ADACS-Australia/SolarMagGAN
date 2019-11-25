@@ -32,10 +32,10 @@ def listdir_nohidden(path):
 
 
 SLEEP_TIME = 1000
-DISPLAY_ITER = 20000
-MAX_ITER = 500000
+DISPLAY_ITER = 10
+MAX_ITER = 50
 
-TRIAL_NAME = 'trial_2'
+TRIAL_NAME = 'small_test'
 
 INPUT = 'AIA'  # input used while training
 # testing input which has a corresponding output (near side AIA)

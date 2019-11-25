@@ -33,8 +33,8 @@ tf.Session(config=config)
 
 
 # Hyper parameters
-NITERS = 500000  # total number of iterations
-DISPLAY_ITERS = 1000  # number of iterations before display and model creation
+NITERS = 50  # total number of iterations
+DISPLAY_ITERS = 10  # number of iterations before display and model creation
 
 # the input data:
 # (originally AIA or Atmospheric Imaging Assembly)
@@ -51,7 +51,7 @@ BATCH_SIZE = 1  # number of images in each batch
 # 1 for 16, 2 for 34, 3 for 70, 4 for 142, and 5 for 286 (receptive field size)
 MAX_LAYERS = 3
 
-TRIAL_NAME = 'trial_2'
+TRIAL_NAME = 'small_test'
 
 
 MODE = INPUT_DATA + '_to_' + OUTPUT_DATA  # folder name for saving the model
