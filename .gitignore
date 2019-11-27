@@ -9,6 +9,8 @@ FITS_DATA
 *.err
 *.out
 *.script
+*.pyc
 
 venv/
 gpu_venv/
+__pycache__/
