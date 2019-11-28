@@ -41,7 +41,7 @@ INPUT = 'AIA'  # input used while training
 # testing input which has a corresponding output (near side AIA)
 INPUT1 = 'AIA'
 # testing input which does not have a corresponding (far side EUVI)
-INPUT2 = 'TEST_INPUT2'
+INPUT2 = 'STEREO'
 # corresponding output for INPUT1 (near side HMI)
 OUTPUT = 'HMI'
 
