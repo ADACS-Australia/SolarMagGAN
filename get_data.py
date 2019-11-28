@@ -50,7 +50,7 @@ if HMI:
 if AIA:
     print('AIA\nStart: ' + start + '\nEnd: ' + end)
     print(res_aia)
-    os.makedirs(HMI_path) if not os.path.exists(AIA_path) else None
+    os.makedirs(AIA_path) if not os.path.exists(AIA_path) else None
     downloaded_files = Fido.fetch(res_aia, path=AIA_path)
 
 if HMI:

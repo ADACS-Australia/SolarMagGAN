@@ -57,6 +57,7 @@ min = 700
 max = 1200
 fits_path = "FITS_DATA/STEREO/"
 png_path = "DATA/TEST/STEREO/"
+os.makedirs(png_path) if not os.path.exists(png_path) else None
 filename = "./" + fits_path + os.listdir(fits_path)[0]
 map_ref = sunpy.map.Map(filename)
 top_right = SkyCoord(920 * u.arcsec, 920 * u.arcsec,
@@ -65,7 +66,6 @@ bottom_left = SkyCoord(-920 * u.arcsec, -920 * u.arcsec,
                        frame=map_ref.coordinate_frame)
 
 for filename in os.listdir(fits_path):
-    os.makedirs(png_path) if not os.path.exists(png_path) else None
     save_to_png(name=filename[:-5],
                 fits_path=fits_path,
                 png_path=png_path,
