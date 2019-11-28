@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import keras.backend as K
 import time
 import tensorflow as tf
+import argparse
 # stop matplotlib from using display so that it still works on cluster
 matplotlib.use('agg')
 
@@ -31,11 +32,31 @@ def listdir_nohidden(path):
     return glob.glob(os.path.join(path, '*'))
 
 
-SLEEP_TIME = 1000
-DISPLAY_ITER = 20000
-MAX_ITER = 500000
+# parse the optional arguments:
+parser = argparse.ArgumentParser()
+parser.add_argument("--model_name",
+                    help="name of model",
+                    default='trial_2'
+                    )
+parser.add_argument("--display_iter",
+                    help="number of iterations between each test",
+                    type=int,
+                    default=20000
+                    )
+parser.add_argument("--max_iter",
+                    help="total number of iterations",
+                    type=int,
+                    default=500000
+                    )
+args = parser.parse_args()
 
-TRIAL_NAME = 'trial_2'
+
+# set parameters
+SLEEP_TIME = 1000
+DISPLAY_ITER = args.display_iter
+MAX_ITER = args.max_iter
+
+TRIAL_NAME = args.model_name
 
 INPUT = 'AIA'  # input used while training
 # testing input which has a corresponding output (near side AIA)
