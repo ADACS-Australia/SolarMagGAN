@@ -46,7 +46,7 @@ def save_to_png(name, fits_path, png_path, min, max, w, h, top_right=None,
     image = image.transpose(Image.FLIP_TOP_BOTTOM)
     # rotate images to match
 
-    image.save(png_path + name + ".png")
+    image.save(png_path + "STEREO.euvi304." + name + ".png")
 
 
 data = "STEREO"
