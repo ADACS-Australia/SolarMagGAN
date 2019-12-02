@@ -54,7 +54,7 @@ w = h = 1024
 # min and maxed were chosen so that the result was as similar to
 # aia between a min of 0 and a max of 150
 min = 700
-max = 1200
+max = 900
 fits_path = "FITS_DATA/STEREO/"
 png_path = "DATA/TEST/STEREO/"
 os.makedirs(png_path) if not os.path.exists(png_path) else None
