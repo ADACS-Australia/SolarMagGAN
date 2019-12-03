@@ -72,9 +72,9 @@ png_path = "DATA/TEST/" + args.name + "/"
 os.makedirs(png_path) if not os.path.exists(png_path) else None
 filename = "./" + fits_path + os.listdir(fits_path)[0]
 map_ref = sunpy.map.Map(filename)
-top_right = SkyCoord(740 * u.arcsec, 740 * u.arcsec,
+top_right = SkyCoord(875 * u.arcsec, 875 * u.arcsec,
                      frame=map_ref.coordinate_frame)
-bottom_left = SkyCoord(-740 * u.arcsec, -740 * u.arcsec,
+bottom_left = SkyCoord(-875 * u.arcsec, -875 * u.arcsec,
                        frame=map_ref.coordinate_frame)
 
 for filename in os.listdir(fits_path):

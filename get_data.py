@@ -11,8 +11,8 @@ email = 'csmi0005@student.monash.edu'
 # query duration:
 AIA_start = HMI_start = '2015/01/01 00:00:00'
 AIA_end = HMI_end = '2015/01/01 00:00:00'
-STEREO_start = '2007-01-01'
-STEREO_end = '2007-01-01T01:00:00'
+STEREO_start = '2011-01-01'
+STEREO_end = '2011-01-01T01:00:00'
 
 AIA = False
 AIA_path = './FITS_DATA/AIA'
