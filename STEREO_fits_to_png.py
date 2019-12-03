@@ -7,6 +7,25 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from PIL import Image
+import argparse
+
+# parse the optional arguments:
+parser = argparse.ArgumentParser()
+parser.add_argument("--min",
+                    help="lower bound cutoff pixel value",
+                    type=int,
+                    default=700
+                    )
+parser.add_argument("--max",
+                    help="upper bound cutoff pixel value",
+                    type=int,
+                    default=900
+                    )
+parser.add_argument("--name",
+                    help="name of folder to be saved in",
+                    default="STEREO")
+
+args = parser.parse_args()
 
 
 def save_to_png(name, fits_path, png_path, min, max, w, h, top_right=None,
@@ -18,21 +37,15 @@ def save_to_png(name, fits_path, png_path, min, max, w, h, top_right=None,
     hdul.verify("fix")
     image_data = hdul[0].data
 
-    # find median
-    med = np.median(image_data)
-
     # Cropping to desired range
     map = sunpy.map.Map(filename)
     image_data = map.submap(bottom_left, top_right).data
 
+    # clip data
+    image_data = np.clip(image_data, min, max)
+
     # translate data so it starts at 0
     image_data -= min
-
-    # normalise to keep consistant
-    image_data = image_data/(med-min)
-
-    # clip data between (0, (max - min)):
-    image_data = np.clip(image_data, 0, (max - min))
 
     # normalise data between 0 and 1
     image_data = image_data/((max - min))
@@ -52,10 +65,10 @@ data = "STEREO"
 w = h = 1024
 # min and maxed were chosen so that the result was as similar to
 # aia between a min of 0 and a max of 150
-min = 700
-max = 900
+min = args.min
+max = args.max
 fits_path = "FITS_DATA/STEREO/"
-png_path = "DATA/TEST/STEREO/"
+png_path = "DATA/TEST/" + args.name + "/"
 os.makedirs(png_path) if not os.path.exists(png_path) else None
 filename = "./" + fits_path + os.listdir(fits_path)[0]
 map_ref = sunpy.map.Map(filename)
