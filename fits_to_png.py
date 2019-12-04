@@ -18,7 +18,7 @@ parser.add_argument("--min",
 parser.add_argument("--max",
                     help="upper bound cutoff pixel value for AIA",
                     type=int,
-                    default=150/4
+                    default=150
                     )
 
 parser.add_argument("--random",
