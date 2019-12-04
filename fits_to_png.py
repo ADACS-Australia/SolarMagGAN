@@ -123,7 +123,7 @@ if __name__ == "__main__":
                 png_path = train_path
 
             if args.random:
-                a_max = random.random()*3800 + 200
+                a_max = random.random()*1800 + 200
             save_to_png(name=filename[:-5],
                         fits_path=fits_path,
                         png_path=png_path,
