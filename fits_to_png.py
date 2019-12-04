@@ -7,6 +7,7 @@ import sunpy.map
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 import argparse
+import random
 
 # parse the optional arguments:
 parser = argparse.ArgumentParser()
@@ -120,6 +121,9 @@ if __name__ == "__main__":
                 png_path = test_path
             else:
                 png_path = train_path
+
+            if args.random:
+                a_max = random.random()*3800 + 200
             save_to_png(name=filename[:-5],
                         fits_path=fits_path,
                         png_path=png_path,
