@@ -15,6 +15,7 @@ from keras.layers import Concatenate
 from keras.layers.advanced_activations import LeakyReLU
 from keras.initializers import RandomNormal
 from keras.optimizers import Adam
+import argparse
 
 
 # configure os environment
@@ -31,14 +32,36 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 tf.Session(config=config)
 
+# parse the optional arguments:
+parser = argparse.ArgumentParser()
+parser.add_argument("--model_name",
+                    help="name of model",
+                    default='trial_2'
+                    )
+parser.add_argument("--input",
+                    help="folder name of input data",
+                    default='AIA'
+                    )
+parser.add_argument("--display_iter",
+                    help="number of iterations between each test",
+                    type=int,
+                    default=20000
+                    )
+parser.add_argument("--max_iter",
+                    help="total number of iterations",
+                    type=int,
+                    default=500000
+                    )
+args = parser.parse_args()
 
 # Hyper parameters
-NITERS = 500000  # total number of iterations
-DISPLAY_ITERS = 1000  # number of iterations before display and model creation
+NITERS = args.max_iter  # total number of iterations
+# number of iterations before display and model creation
+DISPLAY_ITERS = args.display_iter
 
 # the input data:
 # (originally AIA or Atmospheric Imaging Assembly)
-INPUT_DATA = 'AIA'
+INPUT_DATA = args.input
 # The data we want to reproduce:
 # (originally HMI or Helioseismic and Magnetic Imager)
 OUTPUT_DATA = 'HMI'
@@ -51,7 +74,7 @@ BATCH_SIZE = 1  # number of images in each batch
 # 1 for 16, 2 for 34, 3 for 70, 4 for 142, and 5 for 286 (receptive field size)
 MAX_LAYERS = 3
 
-TRIAL_NAME = 'trial_2'
+TRIAL_NAME = args.model_name
 
 
 MODE = INPUT_DATA + '_to_' + OUTPUT_DATA  # folder name for saving the model
