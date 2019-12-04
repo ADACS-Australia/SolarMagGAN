@@ -41,7 +41,7 @@ m_min = -100  # minimum value for magnetograms
 a_min = args.min
 a_max = args.max
 AIA = True
-HMI = True
+HMI = False
 
 
 def save_to_png(name, fits_path, png_path, min, max, w, h,
@@ -62,18 +62,22 @@ def save_to_png(name, fits_path, png_path, min, max, w, h,
         # Cropping
         image_data = map.submap(bottom_left, top_right).data
 
+    # clip data between (min, max):
+    image_data = np.clip(image_data, min, max)
+
+    if normalise:
+        med = hdul[1].header['DATAMEDN']
+        # make sure median is between min and max:
+        np.clip(med, min, max)
+        image_data = image_data/med
+
     if abs:
         image_data = np.abs(image_data)
         min = np.max([0, min])
-    if normalise:
-        int_time = hdul[1].header['DATAMEDN']
-        image_data = image_data/int_time
 
-    # clip data between (min, max):
-    image_data = np.clip(image_data, min, max)
     # translate data so it's between (0, max-min):
     image_data -= min
-    # normalise data
+    # normalise data so it's between (0, 1):
     image_data = image_data/(max - min)
 
     # format data, and convert to image
@@ -123,7 +127,7 @@ if __name__ == "__main__":
                         max=a_max,
                         w=w,
                         h=h,
-                        normalise=True,
+                        normalise=False,
                         crop=True,
                         top_right=top_right,
                         bottom_left=bottom_left
