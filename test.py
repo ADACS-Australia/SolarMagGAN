@@ -43,6 +43,22 @@ parser.add_argument("--display_iter",
                     type=int,
                     default=20000
                     )
+parser.add_argument("--input",
+                    help="folder name of input data",
+                    default='AIA'
+                    )
+parser.add_argument("--test_input",
+                    help="folder name of input data",
+                    default='AIA'
+                    )
+parser.add_argument("--test_data",
+                    help="folder name of input data",
+                    default='STEREO'
+                    )
+parser.add_argument("--output",
+                    help="folder name of input data",
+                    default='HMI'
+                    )
 parser.add_argument("--max_iter",
                     help="total number of iterations",
                     type=int,
@@ -58,13 +74,13 @@ MAX_ITER = args.max_iter
 
 TRIAL_NAME = args.model_name
 
-INPUT = 'AIA'  # input used while training
+INPUT = args.input  # input used while training
 # testing input which has a corresponding output (near side AIA)
-INPUT1 = 'AIA'
+INPUT1 = args.test_input
 # testing input which does not have a corresponding (far side EUVI)
-INPUT2 = 'STEREO'
+INPUT2 = args.test_data
 # corresponding output for INPUT1 (near side HMI)
-OUTPUT = 'HMI'
+OUTPUT = args.output
 
 MODE = INPUT + '_to_' + OUTPUT
 
