@@ -3,7 +3,9 @@ DATA/
 MODELS/
 FIGURES/
 RESULTS/
-FITS_DATA
+FITS_DATA/
+outputs/
+scripts/
 
 *.pkl
 *.err
