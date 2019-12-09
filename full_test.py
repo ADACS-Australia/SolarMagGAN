@@ -43,20 +43,20 @@ parser.add_argument("--display_iter",
                     type=int,
                     default=20000
                     )
-parser.add_argument("--input",
+parser.add_argument("--train_input",
                     help="folder name of input data",
                     default='AIA'
                     )
 parser.add_argument("--test_input",
-                    help="folder name of input data",
+                    help="folder name of input test data with magnetogram",
                     default='AIA'
                     )
 parser.add_argument("--test_data",
-                    help="folder name of input data",
+                    help="folder name of test data",
                     default='STEREO'
                     )
-parser.add_argument("--output",
-                    help="folder name of input data",
+parser.add_argument("--train_output",
+                    help="folder name of training output data",
                     default='HMI'
                     )
 parser.add_argument("--max_iter",
@@ -74,13 +74,13 @@ MAX_ITER = args.max_iter
 
 TRIAL_NAME = args.model_name
 
-INPUT = args.input  # input used while training
+INPUT = args.train_input  # input used while training
 # testing input which has a corresponding output (near side AIA)
 INPUT1 = args.test_input
 # testing input which does not have a corresponding (far side EUVI)
 INPUT2 = args.test_data
 # corresponding output for INPUT1 (near side HMI)
-OUTPUT = args.output
+OUTPUT = args.train_output
 
 MODE = INPUT + '_to_' + OUTPUT
 
