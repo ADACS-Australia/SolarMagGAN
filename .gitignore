@@ -13,6 +13,9 @@ scripts/
 *.script
 *.pyc
 
+output_cleanup.sh
+script_cleanup.sh
+
 venv/
 gpu_venv/
 __pycache__/
