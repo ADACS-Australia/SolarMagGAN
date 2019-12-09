@@ -45,11 +45,11 @@ parser.add_argument("--max_iter",
                     type=int,
                     default=500000
                     )
-parser.add_argument("--training_input",
+parser.add_argument("--train_input",
                     help="folder name of training input data",
                     default='AIA'
                     )
-parser.add_argument("--training_output",
+parser.add_argument("--train_output",
                     help="folder name of training  outpu data",
                     default='HMI'
                     )
