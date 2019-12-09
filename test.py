@@ -74,7 +74,7 @@ INPUT = args.train_input  # input used while training
 INPUT1 = args.test_input
 
 # corresponding output for INPUT1 (near side HMI)
-OUTPUT = args.output
+OUTPUT = args.train_output
 
 MODE = INPUT + '_to_' + OUTPUT
 
