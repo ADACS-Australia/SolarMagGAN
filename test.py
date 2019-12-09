@@ -68,7 +68,7 @@ MAX_ITER = args.max_iter
 
 TRIAL_NAME = args.model_name
 
-INPUT = args.training_input  # input used while training
+INPUT = args.train_input  # input used while training
 
 # testing input
 INPUT1 = args.test_input
