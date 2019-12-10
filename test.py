@@ -103,7 +103,7 @@ def GET_DATE(FILE):  # gets the date of a given file
     if FILE[0] == '.':
         FILE = FILE[1:]
     INFO = FILE.split('.')
-    DATE = INFO[2].replace('-', '').replace('_', '').replace('T', '')[:10]
+    DATE = INFO[2].replace('-', '').replace('_', '').replace('T', '')[:14]
     return int(DATE)
 
 
