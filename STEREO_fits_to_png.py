@@ -38,7 +38,7 @@ def save_to_png(name, fits_path, png_path, min, max, w, h, top_right=None,
 
     print(name)
     filename = fits_path + name
-    hdul = fits.open(filename, memmap=False, ext=0)
+    hdul = fits.open(filename, memmap=False, ext=0, ignore_missing_end=True)
     hdul.verify("fix")
     image_data = hdul[0].data
 
