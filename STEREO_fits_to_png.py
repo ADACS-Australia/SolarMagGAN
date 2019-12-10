@@ -9,17 +9,22 @@ from astropy.coordinates import SkyCoord
 from PIL import Image
 import argparse
 
+# note: pixel intensities between 650 and 5000 of SDO roughly correspond to
+# pixel intensities betweeen 0 and 1000 of AIA
+# therefore pixel intensities between 650 and 9350 of SDO roughly correspond to
+# pixel intensities betweeen 0 and 2000 of AIA
+
 # parse the optional arguments:
 parser = argparse.ArgumentParser()
 parser.add_argument("--min",
                     help="lower bound cutoff pixel value",
                     type=int,
-                    default=700
+                    default=650
                     )
 parser.add_argument("--max",
                     help="upper bound cutoff pixel value",
                     type=int,
-                    default=900
+                    default=5000
                     )
 parser.add_argument("--name",
                     help="name of folder to be saved in",
