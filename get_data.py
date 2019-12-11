@@ -13,7 +13,7 @@ email = 'csmi0005@student.monash.edu'
 AIA_start = HMI_start = '2015/01/01 00:00:00'
 AIA_end = HMI_end = '2015/01/01 00:00:00'
 STEREO_start = '2012-01-01'
-STEREO_end = '2012-01-06'
+STEREO_end = '2012-01-10'
 
 AIA = False
 AIA_path = './FITS_DATA/AIA'
