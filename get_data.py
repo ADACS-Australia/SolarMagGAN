@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Python code for retrieving HMI and AIA data
 from sunpy.net import Fido, attrs as a
 import astropy.units as u  # for AIA
@@ -56,7 +57,7 @@ if STEREO:
                              a.Instrument('EUVI'),
                              a.Time(STEREO_start, STEREO_end),
                              )
-
+    print(res_stereo[0, 0:-1:100])
 
 if AIA:
     print('AIA\nStart: ' + AIA_start + '\nEnd: ' + AIA_end)
@@ -72,6 +73,6 @@ if HMI:
 
 if STEREO:
     print('STEREO\nStart: ' + STEREO_start + '\nEnd: ' + STEREO_end)
-    print(res_stereo)
+    print(res_stereo[0, 0:-1:100])
     os.makedirs(STEREO_path) if not os.path.exists(STEREO_path) else None
-    downloaded_files = Fido.fetch(res_stereo, path=STEREO_path)
+    downloaded_files = Fido.fetch(res_stereo[0, 0:-1:100], path=STEREO_path)
