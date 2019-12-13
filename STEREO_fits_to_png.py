@@ -37,11 +37,16 @@ parser.add_argument("--name",
 args = parser.parse_args()
 
 
-def save_to_png(name, fits_path, png_path, min, max, w, h, top_right=None,
-                bottom_left=None):
+def save_to_png(name, fits_path, png_path, min, max, w, h):
 
-    print(name)
     filename = fits_path + name
+    print(filename)
+    map_ref = sunpy.map.Map(filename)
+    top_right = SkyCoord(875 * u.arcsec, 875 * u.arcsec,
+                         frame=map_ref.coordinate_frame)
+    bottom_left = SkyCoord(-875 * u.arcsec, -875 * u.arcsec,
+                           frame=map_ref.coordinate_frame)
+
     hdul = fits.open(filename, memmap=False, ext=0, ignore_missing_end=True)
     hdul.verify("fix")
     image_data = hdul[0].data
@@ -80,11 +85,6 @@ fits_path = args.FITS_path
 png_path = "DATA/TEST/" + args.name + "/"
 os.makedirs(png_path) if not os.path.exists(png_path) else None
 filename = "./" + fits_path + os.listdir(fits_path)[0]
-map_ref = sunpy.map.Map(filename)
-top_right = SkyCoord(875 * u.arcsec, 875 * u.arcsec,
-                     frame=map_ref.coordinate_frame)
-bottom_left = SkyCoord(-875 * u.arcsec, -875 * u.arcsec,
-                       frame=map_ref.coordinate_frame)
 
 for filename in os.listdir(fits_path):
     save_to_png(name=filename,
@@ -93,7 +93,5 @@ for filename in os.listdir(fits_path):
                 min=min,
                 max=max,
                 w=w,
-                h=h,
-                top_right=top_right,
-                bottom_left=bottom_left,
+                h=h
                 )
