@@ -26,6 +26,10 @@ parser.add_argument("--max",
                     type=int,
                     default=5000
                     )
+parser.add_argument("--FITS_path",
+                    help="directory of FITS data",
+                    default="FITS_DATA/STEREO/"
+                    )
 parser.add_argument("--name",
                     help="name of folder to be saved in",
                     default="STEREO")
@@ -72,7 +76,7 @@ w = h = 1024
 # aia between a min of 0 and a max of 150
 min = args.min
 max = args.max
-fits_path = "FITS_DATA/STEREO/"
+fits_path = args.FITS_path
 png_path = "DATA/TEST/" + args.name + "/"
 os.makedirs(png_path) if not os.path.exists(png_path) else None
 filename = "./" + fits_path + os.listdir(fits_path)[0]
