@@ -3,7 +3,7 @@ from astropy.io import fits
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 import os
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import argparse
 
 
@@ -51,7 +51,7 @@ for file in os.listdir(fits_path):
         position_string = str(position[0]) + "_" + str(position[1])
 
         # new hdu:
-        hdu = fits.PrimaryHDU()
+        hdu = fits.ImageHDU()
         hdu.data = cutout.data
 
         # remove checksum and datasum of old header
@@ -61,14 +61,14 @@ for file in os.listdir(fits_path):
         # update with cropping info:
         header.update(cutout.wcs.to_header())
 
-        # update new header
+        # update new header with old header info, and update checksum
         hdu.header.update(header)
         hdu.update_header()
-        print(hdu.header)
+        hdu.add_checksum()
 
         hdu.verify("fix")
 
-        hdu.writeto(save_path + "/" + position_string + file,
-                    output_verify='ignore',
-                    overwrite=True
-                    )
+        name = position_string + file
+        print(name)
+        hdu.writeto(save_path + "/" + name, output_verify='ignore',
+                    overwrite=True)
