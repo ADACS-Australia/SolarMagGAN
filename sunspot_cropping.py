@@ -32,7 +32,7 @@ os.makedirs(save_path) if not os.path.exists(save_path) else None
 
 # for each fits file, find all sunspot coordinates and crop around them
 for file in os.listdir(fits_path):
-    sunspot_coords = [(1000, 2000), (2048, 2048)]
+    sunspot_coords = [(3472, 2182)]
     filename = fits_path + "/" + file
     hdul = fits.open(filename, memmap=False, ext=0, ignore_missing_end=True)
     hdul.verify("fix")
