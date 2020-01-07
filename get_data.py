@@ -58,6 +58,11 @@ parser.add_argument("--STEREO_cadence",
                     type=int,
                     default=100
                     )
+parser.add_argument("--wavelength",
+                    help="wavelength of AIA images in angstroms",
+                    type=int,
+                    default=304
+                    )
 args = parser.parse_args()
 
 # query duration:
@@ -73,7 +78,7 @@ HMI_path = args.HMI_path
 STEREO = args.STEREO
 STEREO_path = args.STEREO_path
 cadence = args.cadence*u.hour  # take images every 12 hours
-wavelength = 304*u.AA  # 304 Angstroms
+wavelength = args.wavelength*u.AA  # wavelength in angstroms
 stereo_cadence = args.STEREO_cadence  # use 1 in every n images
 
 # time intervals to avoid missing data
