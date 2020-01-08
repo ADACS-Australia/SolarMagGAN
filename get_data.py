@@ -138,6 +138,7 @@ if STEREO:
 # sort dates
 missing.sort()
 print(missing)
+
 if AIA:
     print('AIA\nStart: ' + AIA_start + '\nEnd: ' + AIA_end)
     print(res_aia)
