@@ -9,7 +9,7 @@ email = 'csmi0005@student.monash.edu'
 path = "./FITS_DATA/AIA_1700"
 os.makedirs(path) if not os.path.exists(path) else None
 start_date = pd.Timestamp('2011/01/01 00:00:00')
-end_date = pd.Timestamp('2011/02/01 00:00:00')
+end_date = pd.Timestamp('2017/01/01 00:00:00')
 date = start_date
 range = TimeRange(start_date, 24*u.s)
 time_series = a.Time(range)
