@@ -8,8 +8,8 @@ email = 'csmi0005@student.monash.edu'
 path = "./FITS_DATA/AIA_1700"
 os.makedirs(path) if not os.path.exists(path) else None
 
-start_date = pd.Timestamp('2011/01/01 00:00:14')
-end_date = pd.Timestamp('2017/01/01 00:00:00')
+start_date = pd.Timestamp('2011/01/01 00:00:14Z')
+end_date = pd.Timestamp('2017/01/01 00:00:00Z')
 batch_span = 30*24  # download files in groups spanning 30 days
 
 batch_start = start_date
