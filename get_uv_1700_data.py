@@ -38,4 +38,4 @@ while batch_end <= end_date:
     end_of_batch = str(res_aia.get_response(0)['T_REC'][-1])
     # start and end dates of next batch
     batch_start = pd.Timestamp(end_of_batch)
-    batch_end = batch_start + pd.Timedelta(batch_span)
+    batch_end = batch_start + pd.Timedelta(hours=batch_span)
