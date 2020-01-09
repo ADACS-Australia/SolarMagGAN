@@ -29,7 +29,7 @@ while batch_end <= end_date:
     # download files
     try:
         downloaded_files = Fido.fetch(res_aia, path=path)
-    except Exception, e:
+    except Exception as e:
         print("couldn't download files between " +
               str(batch_start) + " and " + str(batch_end))
         print(str(e))
