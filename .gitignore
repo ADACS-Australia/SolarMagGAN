@@ -17,6 +17,8 @@ scripts/
 output_cleanup.sh
 script_cleanup.sh
 
+testing.py
+
 venv/
 gpu_venv/
 __pycache__/
