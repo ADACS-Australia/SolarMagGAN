@@ -4,6 +4,7 @@ import glob
 import time
 from random import shuffle
 from imageio import imread
+import pandas as pd
 import tensorflow as tf
 
 import keras.backend as K
@@ -318,6 +319,21 @@ def LOAD_DATA(FILE_PATTERN):
     return glob.glob(FILE_PATTERN)
 
 
+def GET_DATE(file):
+    filename = file.split("/")[-1]  # filename is at end of file path
+    date_str = filename.split(".")[2]  # date string is after second "."
+    date_str = date_str.replace("_", "")  # remove underscores
+    date_str = date_str.replace("-", "")  # remove hyphens
+    date_str = date_str.replace("TAI", "z")  # TAI and Z are both UTC
+    date = pd.Timestamp(date_str)
+    return date
+
+
+def GET_TIMESTAMP(file):
+    date = GET_DATE(file)
+    return date.timestamp()
+
+
 # FN = filenames, NC_IN = #channels in input, NC_OUT = #channels in output
 # This function essentially reads the image, and shifts it slightly by up
 # to 15 pixels any direction before returning it. This is probably to
@@ -374,7 +390,42 @@ def MINI_BATCH(DATA_AB, BATCH_SIZE, NC_IN, NC_OUT):
 LIST_INPUT = LOAD_DATA(IMAGE_PATH_INPUT)
 # output data
 LIST_OUTPUT = LOAD_DATA(IMAGE_PATH_OUTPUT)
+
+# sort lists based on timestamp
+LIST_OUTPUT = sorted(LIST_OUTPUT, key=GET_TIMESTAMP)
+LIST_INPUT = sorted(LIST_INPUT, key=GET_TIMESTAMP)
+
+
+i = 0  # index of LIST_INPUT
+j = 0  # index of LIST_OUTPUT
+
+# only keep images takthat are in both input and output
+while i < len(LIST_INPUT) and j < len(LIST_OUTPUT):
+    input = LIST_INPUT[i]
+    in_time = GET_DATE(input)
+    output = LIST_OUTPUT[j]
+    out_time = GET_DATE(output)
+    # if input is after output, delete output:
+    if in_time.date() > out_time.date():
+        del(LIST_OUTPUT[j])
+    # if input is before output, delete input:
+    elif in_time.date() < out_time.date():
+        del(LIST_INPUT[i])
+    # if input is after output, delete output:
+    elif in_time.hour > out_time.hour:
+        del(LIST_OUTPUT[j])
+    # if input is before output, delete input:
+    elif in_time.hour < out_time.hour:
+        del(LIST_INPUT[i])
+    # else, date and hours are the same, so we have a pair!
+    else:
+        # increment both lists
+        i += 1
+        j += 1
+
+
 assert len(LIST_INPUT) == len(LIST_OUTPUT)
+
 # zips the data such that each element is a (input, output) pair
 LIST_TOTAL = list(zip(sorted(LIST_INPUT), sorted(LIST_OUTPUT)))
 # creates a generator to use for training
