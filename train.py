@@ -399,8 +399,8 @@ LIST_INPUT = sorted(LIST_INPUT, key=GET_TIMESTAMP)
 i = 0  # index of LIST_INPUT
 j = 0  # index of LIST_OUTPUT
 
-# only keep images takthat are in both input and output
-while i < len(LIST_INPUT) or j < len(LIST_OUTPUT):
+# only keep images that are in both input and output
+while i < len(LIST_INPUT) and j < len(LIST_OUTPUT):
     input = LIST_INPUT[i]
     in_time = GET_DATE(input)
     output = LIST_OUTPUT[j]
@@ -423,6 +423,10 @@ while i < len(LIST_INPUT) or j < len(LIST_OUTPUT):
         i += 1
         j += 1
 
+# trim ends of lists so they are the same size
+length = min(i, j)
+LIST_INPUT = LIST_INPUT[:length]
+LIST_OUTPUT = LIST_OUTPUT[:length]
 
 assert len(LIST_INPUT) == len(LIST_OUTPUT)
 
