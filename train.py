@@ -400,7 +400,7 @@ i = 0  # index of LIST_INPUT
 j = 0  # index of LIST_OUTPUT
 
 # only keep images takthat are in both input and output
-while i < len(LIST_INPUT) and j < len(LIST_OUTPUT):
+while i < len(LIST_INPUT) or j < len(LIST_OUTPUT):
     input = LIST_INPUT[i]
     in_time = GET_DATE(input)
     output = LIST_OUTPUT[j]
