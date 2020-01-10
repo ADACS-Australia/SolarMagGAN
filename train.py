@@ -432,6 +432,9 @@ assert len(LIST_INPUT) == len(LIST_OUTPUT)
 
 # zips the data such that each element is a (input, output) pair
 LIST_TOTAL = list(zip(sorted(LIST_INPUT), sorted(LIST_OUTPUT)))
+
+print("Input Output Pairs:")
+print(LIST_TOTAL)
 # creates a generator to use for training
 TRAIN_BATCH = MINI_BATCH(LIST_TOTAL, BATCH_SIZE, NC_IN, NC_OUT)
 
