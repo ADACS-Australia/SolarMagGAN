@@ -18,7 +18,7 @@ from keras.initializers import RandomNormal
 from keras.optimizers import Adam
 import argparse
 
-print(1)
+
 # configure os environment
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
@@ -95,7 +95,6 @@ os.makedirs(MODEL_PATH) if not os.path.exists(MODEL_PATH) else None
 CONV_INIT = RandomNormal(0, 0.02)
 GAMMA_INIT = RandomNormal(1., 0.02)
 
-print(2)
 
 # The loss function
 def LOSS_FN(OUTPUT, TARGET):
@@ -260,7 +259,7 @@ def UNET_G(ISIZE, NC_IN, NC_OUT, FIXED_INPUT_SIZE=True):
 
     return Model(inputs=INPUT, outputs=[X])
 
-print(3)
+
 # The discriminator model
 NET_D = BASIC_D(ISIZE, NC_IN, NC_OUT, MAX_LAYERS)
 # The generator model
@@ -314,7 +313,7 @@ NET_G_TRAIN = K.function([REAL_A, REAL_B],
                          [LOSS_G_FAKE, LOSS_L],
                          TRAINING_UPDATES_G)
 
-print(4)
+
 # returns list of files that match FILE_PATTERN
 def LOAD_DATA(FILE_PATTERN):
     return glob.glob(FILE_PATTERN)
@@ -400,7 +399,6 @@ LIST_INPUT = sorted(LIST_INPUT, key=GET_TIMESTAMP)
 i = 0  # index of LIST_INPUT
 j = 0  # index of LIST_OUTPUT
 
-print(5)
 # only keep images that are in both input and output
 while i < len(LIST_INPUT) and j < len(LIST_OUTPUT):
     input = LIST_INPUT[i]
