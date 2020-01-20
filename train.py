@@ -22,7 +22,7 @@ import argparse
 # configure os environment
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # configure keras
 K.set_image_data_format('channels_last')
