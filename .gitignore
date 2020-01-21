@@ -12,7 +12,7 @@ scripts/
 *.out
 *.script
 *.pyc
-
+*.ipynb
 
 output_cleanup.sh
 script_cleanup.sh
