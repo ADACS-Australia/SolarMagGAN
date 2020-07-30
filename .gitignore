@@ -20,5 +20,6 @@ script_cleanup.sh
 testing.py
 
 venv/
+envs/
 gpu_venv/
 __pycache__/
