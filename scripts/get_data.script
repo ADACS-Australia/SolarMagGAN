@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#SBATCH --job-name=data_collection
+
+# Request CPU resource for a serial job
+#SBATCH --ntasks=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=6
+
+
+# Memory usage (MB)
+#SBATCH --mem-per-cpu=2G
+
+# Set your minimum acceptable walltime, format: day-hours:minutes:seconds
+#SBATCH --time=30:00:00
+
+#SBATCH --mail-user=csmi0005@student.monash.edu
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+# Command to run a gpu job
+source ~/.bashrc
+conda activate winter_project
+cd /mnt/lustre/projects/Mona0028/adonea/SolarMagGAN
+time python get_uv_1700_data.py

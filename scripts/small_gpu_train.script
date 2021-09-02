@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#SBATCH --job-name=P100_train
+
+# Request CPU resource for a serial job
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=1
+
+# Request for GPU,
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:P100:2
+
+# Memory usage (MB)
+#SBATCH --mem=10G
+
+# Set your minimum acceptable walltime, format: day-hours:minutes:seconds
+#SBATCH --time=01:00:00
+
+#SBATCH --mail-user=csmi0005@student.monash.edu
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+# Command to run a gpu job
+source ~/.bashrc
+conda activate tf_gpu
+cd /mnt/lustre/projects/Mona0028/adonea/SolarMagGAN
+time python train.py
