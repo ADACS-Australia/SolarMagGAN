@@ -16,36 +16,28 @@ import argparse
 
 # parse the optional arguments:
 parser = argparse.ArgumentParser()
-parser.add_argument("--min",
-                    help="lower bound cutoff pixel value",
-                    type=int,
-                    default=650
-                    )
-parser.add_argument("--max",
-                    help="upper bound cutoff pixel value",
-                    type=int,
-                    default=5000
-                    )
-parser.add_argument("--FITS_path",
-                    help="directory of FITS data",
-                    default="FITS_DATA/STEREO/"
-                    )
-parser.add_argument("--name",
-                    help="name of folder to be saved in",
-                    default="STEREO")
+parser.add_argument(
+    "--min", help="lower bound cutoff pixel value", type=int, default=650
+)
+parser.add_argument(
+    "--max", help="upper bound cutoff pixel value", type=int, default=5000
+)
+parser.add_argument(
+    "--FITS_path", help="directory of FITS data", default="FITS_DATA/STEREO/"
+)
+parser.add_argument("--name", help="name of folder to be saved in", default="STEREO")
 
 args = parser.parse_args()
 
 
 def save_to_png(name, fits_path, png_path, min, max, w, h):
-
     filename = fits_path + name
     print(filename)
     map_ref = sunpy.map.Map(filename)
-    top_right = SkyCoord(875 * u.arcsec, 875 * u.arcsec,
-                         frame=map_ref.coordinate_frame)
-    bottom_left = SkyCoord(-875 * u.arcsec, -875 * u.arcsec,
-                           frame=map_ref.coordinate_frame)
+    top_right = SkyCoord(875 * u.arcsec, 875 * u.arcsec, frame=map_ref.coordinate_frame)
+    bottom_left = SkyCoord(
+        -875 * u.arcsec, -875 * u.arcsec, frame=map_ref.coordinate_frame
+    )
 
     hdul = fits.open(filename, memmap=False, ext=0, ignore_missing_end=True)
     hdul.verify("fix")
@@ -62,10 +54,10 @@ def save_to_png(name, fits_path, png_path, min, max, w, h):
     image_data -= min
 
     # normalise data between 0 and 1
-    image_data = image_data/((max - min))
+    image_data = image_data / ((max - min))
 
     # format data, and convert to image
-    image = Image.fromarray(np.uint8(image_data * 255), 'L')
+    image = Image.fromarray(np.uint8(image_data * 255), "L")
     # crop to diameter of sun
     image = image.resize((w, h), Image.LANCZOS)
     # flip image to match original orientation.
@@ -87,11 +79,12 @@ os.makedirs(png_path) if not os.path.exists(png_path) else None
 filename = "./" + fits_path + os.listdir(fits_path)[0]
 
 for filename in os.listdir(fits_path):
-    save_to_png(name=filename,
-                fits_path=fits_path,
-                png_path=png_path,
-                min=min,
-                max=max,
-                w=w,
-                h=h
-                )
+    save_to_png(
+        name=filename,
+        fits_path=fits_path,
+        png_path=png_path,
+        min=min,
+        max=max,
+        w=w,
+        h=h,
+    )

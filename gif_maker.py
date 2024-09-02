@@ -4,14 +4,14 @@ import os
 
 
 def GET_DATE(FILE):  # gets the date of a given file
-    if FILE[0] == '.':
+    if FILE[0] == ".":
         FILE = FILE[1:]
     if FILE[0:7] == "STEREO_":
         INFO = FILE.split("_")
         DATE = INFO[5][:-4]
     else:
-        INFO = FILE.split('.')
-        DATE = INFO[2].replace('-', '').replace('_', '').replace('T', '')[:10]
+        INFO = FILE.split(".")
+        DATE = INFO[2].replace("-", "").replace("_", "").replace("T", "")[:10]
     return int(DATE)
 
 
@@ -42,7 +42,7 @@ for paths in path_list:
         total_width = sum(widths)
         max_height = max(heights)
 
-        new_im = Image.new('RGB', (total_width, max_height))
+        new_im = Image.new("RGB", (total_width, max_height))
 
         x_offset = 0
         for im in images:
@@ -56,4 +56,4 @@ for path in (near_path, far_path):
     images = []
     for filename in sorted(os.listdir(path), key=GET_DATE):
         images.append(imageio.imread(path + filename))
-    imageio.mimsave(path[2:-1] + '.gif', images)
+    imageio.mimsave(path[2:-1] + ".gif", images)
