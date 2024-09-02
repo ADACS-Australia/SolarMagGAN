@@ -1,0 +1,9 @@
+tensorflow
+keras
+imageio
+numpy
+matplotlib
+astropy
+pandas
+pillow
+sunpy
