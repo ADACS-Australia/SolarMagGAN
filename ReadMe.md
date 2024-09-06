@@ -7,15 +7,19 @@
 4. run `test.py` to test the models on new data, and generate figures for the results. The output png files are saved in the `RESULTS` folder, while the generated figures are saved in the `FIGURES` folder.
 
 ### Environments
-To run `train.py` and `test.py` with the correct packages we made use of a conda environment.
+Requires Python 3.7.
 
-To create a similar conda environment for using a gpu use the command:
+Easiest way to get the correct environment is to use conda/mamba
 
-`conda create --name gpu_env python=3.6 tensorflow-gpu==1.12 keras-gpu imageio matplotlib`
+```
+mamba create -n solar -c conda-forge python=3.7 "sunpy<=1.0.0" imageio "numpy<1.19.0,>=1.16.0" matplotlib "astropy<4.0.0" pandas pillow "h5py==2.10.0" ipython "protobuf<3.21.0"
+```
 
-Alternatively, for a normal cpu, use the command:
+Then use `pip` to install `tensorflow` and `keras`, since the required versions are no longer available on `conda-forge`
 
-`conda create --name cpu_env python=3.6 tensorflow==1.12 Keras imageio matplotlib`
+```
+pip install "tensorflow<2.0.0" "keras<2.2.5"
+```
 
 ## Network architectures
 
@@ -49,7 +53,7 @@ decoder:
 9. Conv2DTranspose(filter = 64, strides = 2), BatchNorm, ReLU
 10. Conv2DTranspose(filter = 1, strides = 2), Tanh
 
-Also, the generator has skip-connections between layers of the encoder and layers of the decoder like the U-Net architecture. 
+Also, the generator has skip-connections between layers of the encoder and layers of the decoder like the U-Net architecture.
 
 skip-connection:
 
@@ -83,7 +87,7 @@ The receptive field size used in our discriminator is 70 x 70.
 * Batch iteration : 500,000
 * Batch size : 1
 
-#### Optimizer 
+#### Optimizer
 * Optimizer : Adam solver
 * Learning rate : 0.0002
 * momentum beta 1 parameter : 0.5

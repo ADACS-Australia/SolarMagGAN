@@ -1,9 +1,12 @@
-tensorflow
-keras
+sunpy<=1.0.0
+tensorflow<2.0.0
+keras<2.2.5
+numpy<1.19.0,>=1.16.0
+astropy<4.0.0
+h5py==2.10.0
+protobuf<3.21.0
 imageio
-numpy
 matplotlib
-astropy
 pandas
 pillow
-sunpy
+ipython
