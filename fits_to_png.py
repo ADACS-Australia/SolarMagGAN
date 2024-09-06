@@ -1,71 +1,40 @@
-from PIL import Image
-from astropy.io import fits
-import numpy as np
-import os
-import sunpy
-import sunpy.map
-import astropy.units as u
-from astropy.coordinates import SkyCoord
 import argparse
+import os
 import random
 
-# parse the optional arguments:
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--min", help="lower bound cutoff pixel value for AIA", type=int, default=0
-)
-parser.add_argument(
-    "--max", help="upper bound cutoff pixel value for AIA", type=int, default=150
-)
-
-parser.add_argument(
-    "--random",
-    help="randomly assign upper bound pixel value for AIA",
-    action="store_true",
-)
-
-parser.add_argument(
-    "--name", help="name of folder for AIA to be saved in", default="AIA"
-)
-
-args = parser.parse_args()
+import astropy.units as u
+import numpy as np
+import sunpy
+import sunpy.map
+from astropy.coordinates import SkyCoord
+from astropy.io import fits
+from PIL import Image
 
 
-input = "AIA"
-output = "HMI"
-w = h = 1024  # desired width and height of png
-m_max = 100  # maximum value for magnetograms
-m_min = -100  # minimum value for magnetograms
-a_min = args.min
-a_max = args.max
-AIA = True
-HMI = False
-
-
-def save_to_png(
-    name,
-    fits_path,
-    png_path,
-    min,
-    max,
-    w,
-    h,
+def fits_to_png(
+    fits_file,
+    output_file,
+    min_clip=-100,
+    max_clip=100,
+    width=1024,
+    height=1024,
     normalise=False,
     rotate=False,
-    abs=False,
+    absolute=False,
     crop=False,
-    top_right=None,
-    bottom_left=None,
 ):
-    print(name)
-    filename = fits_path + name + ".fits"
-    hdul = fits.open(filename, memmap=True, ext=0)
+
+    cf = sunpy.map.Map(fits_file).coordinate_frame
+    top_right = SkyCoord(1000 * u.arcsec, 1000 * u.arcsec, frame=cf)
+    bottom_left = SkyCoord(-1000 * u.arcsec, -1000 * u.arcsec, frame=cf)
+
+    hdul = fits.open(fits_file, memmap=True, ext=0)
     hdul.verify("fix")
     if not crop:
         image_data = hdul[1].data
     else:
         # Cropping to desired range
-        map = sunpy.map.Map(filename)
+        map = sunpy.map.Map(fits_file)
         if rotate:
             map = map.rotate(angle=180 * u.deg)
 
@@ -73,109 +42,113 @@ def save_to_png(
         image_data = map.submap(bottom_left, top_right).data
 
     # clip data between (min, max):
-    image_data = np.clip(image_data, min, max)
+    image_data = np.clip(image_data, min_clip, max_clip)
 
     if normalise:
         med = hdul[1].header["DATAMEDN"]
         # make sure median is between min and max:
-        np.clip(med, min, max)
+        np.clip(med, min_clip, max_clip)
         image_data = image_data / med
 
-    if abs:
+    if absolute:
         image_data = np.abs(image_data)
-        min = np.max([0, min])
+        min_clip = np.max([0, min_clip])
 
     # translate data so it's between (0, max-min):
-    image_data -= min
+    image_data -= min_clip
     # normalise data so it's between (0, 1):
-    image_data = image_data / (max - min)
+    image_data = image_data / (max_clip - min_clip)
 
     # format data, and convert to image
     image = Image.fromarray(np.uint8(image_data * 255), "L")
     # crop to diameter of sun
-    image = image.resize((w, h), Image.LANCZOS)
+    image = image.resize((width, height), Image.LANCZOS)
     # flip image to match original orientation.
     image = image.transpose(Image.FLIP_TOP_BOTTOM)
     # rotate images to match
     if rotate and not crop:
         image = image.transpose(Image.ROTATE_180)
 
-    image.save(png_path + name + ".png")
+    image.save(output_file)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Convert a FITS file to a PNG image.")
+    parser.add_argument("fits_files", type=str, nargs="+", help="The input FITS files.")
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        help="The output directory. Defaults to the current directory.",
+        default=".",
+    )
+    parser.add_argument(
+        "--random",
+        help="randomly assign upper bound pixel value (use this for AIA images). 'max' argument will be ignored.",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument("--min", type=int, help="Minimum pixel value", default=-100)
+    parser.add_argument("--max", type=int, help="Maximum pixel value", default=100)
+    parser.add_argument(
+        "--normalise", help="Normalise the image", action="store_true", default=False
+    )
+    parser.add_argument(
+        "--rotate", help="Rotate the image", action="store_true", default=False
+    )
+    parser.add_argument(
+        "--abs", help="Absolute value of the image", action="store_true", default=False
+    )
+    parser.add_argument(
+        "--crop", help="Crop the image", action="store_true", default=False
+    )
+    args = parser.parse_args()
+
+    # check if the output directory exists
+    if not os.path.isdir(args.output):
+        print(f"Directory {args.output} does not exist.")
+        exit(1)
+
+    for fits_file in args.fits_files:
+
+        # check if the file exists
+        if not os.path.isfile(fits_file):
+            print(f"File {fits_file} does not exist.")
+            continue
+
+        # get the name of the input file, minus the path
+        basename = os.path.basename(fits_file)
+
+        # if extension is either .fits or .fit or .fts , replace it with .png
+        if basename.endswith(".fits"):
+            output_file = basename.strip(".fits") + ".png"
+        elif basename.endswith(".fit"):
+            output_file = basename.strip(".fit") + ".png"
+        elif basename.endswith(".fts"):
+            output_file = basename.strip(".fts") + ".png"
+        else:
+            output_file = basename + ".png"
+
+        # join the output directory with the output file
+        output_file = os.path.join(args.output, output_file)
+
+        if args.random:
+            max_clip = random.random() * 1800 + 200
+        else:
+            max_clip = args.max
+
+        fits_to_png(
+            fits_file,
+            output_file,
+            min_clip=args.min,
+            max_clip=max_clip,
+            normalise=args.normalise,
+            rotate=args.rotate,
+            absolute=args.abs,
+            crop=args.crop,
+        )
+        print(f"Converted {fits_file} to {output_file}")
 
 
 if __name__ == "__main__":
-    # -1000 to 1000 arcsec results in a full disk image.
-    # Slightly lower values will be closerto the actual edge of the Sun
-    filename = "./FITS_DATA/HMI/" + os.listdir("FITS_DATA/HMI/")[0]
-    map_ref = sunpy.map.Map(filename)
-    top_right = SkyCoord(
-        1000 * u.arcsec, 1000 * u.arcsec, frame=map_ref.coordinate_frame
-    )
-    bottom_left = SkyCoord(
-        -1000 * u.arcsec, -1000 * u.arcsec, frame=map_ref.coordinate_frame
-    )
-    # AIA:
-    if AIA:
-        fits_path = "FITS_DATA/" + input + "/"
-        name = args.name
-        test_path = "DATA/TEST/" + name + "/"
-        train_path = "DATA/TRAIN/" + name + "/"
-        # make directories if they don't exist
-        os.makedirs(test_path) if not os.path.exists(test_path) else None
-        os.makedirs(train_path) if not os.path.exists(train_path) else None
-
-        for filename in os.listdir(fits_path):
-            file_info = filename.split(".")
-            date = file_info[2].replace("-", "")
-            month = date[4:6]
-            if month == "09" or month == "10":
-                png_path = test_path
-            else:
-                png_path = train_path
-
-            if args.random:
-                a_max = random.random() * 1800 + 200
-            save_to_png(
-                name=filename[:-5],
-                fits_path=fits_path,
-                png_path=png_path,
-                min=a_min,
-                max=a_max,
-                w=w,
-                h=h,
-                normalise=False,
-                crop=True,
-                top_right=top_right,
-                bottom_left=bottom_left,
-            )
-    # HMI:
-    if HMI:
-        fits_path = "FITS_DATA/" + output + "/"
-        test_path = "DATA/TEST/" + output + "/"
-        train_path = "DATA/TRAIN/" + output + "/"
-        # make directories if they don't exist
-        os.makedirs(test_path) if not os.path.exists(test_path) else None
-        os.makedirs(train_path) if not os.path.exists(train_path) else None
-
-        for filename in os.listdir(fits_path):
-            file_info = filename.split(".")
-            date = file_info[2].replace("-", "")
-            month = date[4:6]
-            if month == "09" or month == "10":
-                png_path = test_path
-            else:
-                png_path = train_path
-            save_to_png(
-                name=filename[:-5],
-                fits_path=fits_path,
-                png_path=png_path,
-                min=m_min,
-                max=m_max,
-                w=w,
-                h=h,
-                rotate=True,
-                abs=abs,
-                crop=True,
-                top_right=top_right,
-                bottom_left=bottom_left,
-            )
+    main()
