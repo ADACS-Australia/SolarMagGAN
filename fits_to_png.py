@@ -62,9 +62,9 @@ def fits_to_png(
     # format data, and convert to image
     image = Image.fromarray(np.uint8(image_data * 255), "L")
     # crop to diameter of sun
-    image = image.resize((width, height), Image.LANCZOS)
+    image = image.resize((width, height), Image.Resampling.LANCZOS)
     # flip image to match original orientation.
-    image = image.transpose(Image.FLIP_TOP_BOTTOM)
+    image = image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
     # rotate images to match
     if rotate and not crop:
         image = image.transpose(Image.ROTATE_180)
